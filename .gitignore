@@ -1,0 +1,5 @@
+.idea/*
+src/.env
+build/*
+dist/*
+*__pycache__/*
