@@ -12,13 +12,20 @@ from .classes import Website
 
 class WebScanner:
     CONFIG_FILE = 'webscanner.properties'
-    LINK_EXAMPLE = """
+    LINK_SCAN_TONE = """
+    You are provided with a list of links found on a webpage.
+    You are able to decide which of the links would be most relevant to include in a brochure about the company, 
+    such as links to an About page, or a Company page, or Careers/Jobs pages.
+    You should respond in JSON as in this example:
     {
             "links": [
                 {"type": "about page", "url": "https://full.url/goes/here/about"},
                 {"type": "careers page": "url": "https://another.full.url/careers"}
             ]
     }
+    
+    "type" and "url" must be Strings, not an object or array.
+    "url" must be a valid https url.
     """
 
     OPEN_AI_SERVICE: OpenAIService = None
@@ -39,14 +46,11 @@ class WebScanner:
         self.__display_brochure(brochure)
 
     def __scan_links(self, website: Website, brochure_config: dict) -> str:
-        link_scan_tone = (brochure_config['link_scan_tone']
-                          .replace('{tone}', self.TONE)
-                          .replace('{example}', self.LINK_EXAMPLE))
         link_scan_request = (brochure_config['link_scan_request']
                              .replace('{url}', website.title)
                              .replace('{links}', ", ".join(website.links)))[:5000]
 
-        link_scan_results = self.OPEN_AI_SERVICE.make_request(link_scan_tone, link_scan_request, True)
+        link_scan_results = self.OPEN_AI_SERVICE.make_request(self.LINK_SCAN_TONE, link_scan_request, True)
 
         if not link_scan_results.choices:
             print("\nAI request failed\n")
