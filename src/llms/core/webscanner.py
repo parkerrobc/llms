@@ -4,106 +4,100 @@ import sys
 from rich.markdown import Markdown
 from rich.console import Console
 
-from .classes import Website
+from helpers import Config
 from service import OpenAIService
 
-BROCHURE_SCAN_TONE = """
-You are an assistant that analyzes the contents of several relevant pages from a company website
-and creates a short brochure about the company for prospective customers, investors and recruits. Respond in markdown.
-Include details of company culture, customers and careers/jobs if you have the information.
-"""
-
-LINK_SCAN_TONE = """
-You are provided with a list of links found on a webpage.
-You are able to decide which of the links would be most relevant to include in a brochure about the company,
-such as links to an About page, or a Company page, or Careers/Jobs pages.
-
-You should respond in JSON as in this example:
-
-{
-    "links": [
-        {"type": "about page", "url": "https://full.url/goes/here/about"},
-        {"type": "careers page": "url": "https://another.full.url/careers"}
-    ]
-}
-
-"type" and "url" must be Strings, not an object or array.
-"url" must be a valid https url or a full url.
-"""
+from .classes import Website
 
 
-def __create_link_scan_request(website: Website) -> str:
-    return f"""
-            Here is the list of links on the website of {website.url} - please decide which of these are relevant 
-            web links for a brochure about the company, respond with the full https URL in JSON format. 
-            Do not include Terms of Service, Privacy, email links.
+class WebScanner:
+    CONFIG_FILE = 'webscanner.properties'
+    LINK_EXAMPLE = """
+    {
+            "links": [
+                {"type": "about page", "url": "https://full.url/goes/here/about"},
+                {"type": "careers page": "url": "https://another.full.url/careers"}
+            ]
+    }
+    """
 
-            Links (some might be relative links):
-            {" ".join(website.links)}
-            """[:5000]
+    OPEN_AI_SERVICE: OpenAIService = None
+    CONFIG: Config = None
 
+    TONE: str = ''
 
-def __create_brochure_request(website: Website, scan_results: str) -> str:
-    return f"""
-    You are looking at a company called: {website.title}. 
-    Here are the contents of its landing page and other relevant pages; use this information to build a 
-    short brochure of the company in markdown.
-    
-    {scan_results}
-    """[:5000]
+    def __init__(self, tone: str, open_ai_service: OpenAIService):
+        self.CONFIG = Config(self.CONFIG_FILE)
+        self.OPEN_AI_SERVICE = open_ai_service
+        self.TONE = tone or ''
 
+    def create_brochure(self, url: str) -> None:
+        brochure_config = self.CONFIG.dict['BROCHURE']
+        website = Website(url)
+        link_scan_results = self.__scan_links(website, brochure_config)
+        brochure = self.__make_brochure(website.title, link_scan_results, brochure_config)
+        self.__display_brochure(brochure)
 
-def __scan_website(website: Website, open_ai_service: OpenAIService) -> str:
-    link_scan_request = __create_link_scan_request(website)
-    link_scan_results = open_ai_service.make_request(LINK_SCAN_TONE, link_scan_request, True)
+    def __scan_links(self, website: Website, brochure_config: dict) -> str:
+        link_scan_tone = (brochure_config['link_scan_tone']
+                          .replace('{tone}', self.TONE)
+                          .replace('{example}', self.LINK_EXAMPLE))
+        link_scan_request = (brochure_config['link_scan_request']
+                             .replace('{url}', website.title)
+                             .replace('{links}', ", ".join(website.links)))[:5000]
 
-    if not link_scan_results.choices:
-        print("\nAI request failed\n")
-        sys.exit(1)
+        link_scan_results = self.OPEN_AI_SERVICE.make_request(link_scan_tone, link_scan_request, True)
 
-    links = json.loads(link_scan_results.choices[0].message.content)
+        if not link_scan_results.choices:
+            print("\nAI request failed\n")
+            sys.exit(1)
 
-    if not links:
-        print("\nNo links found\n")
-        sys.exit(1)
+        links = json.loads(link_scan_results.choices[0].message.content)
 
-    link_content: str = ''
+        if not links:
+            return website.get_contents()
 
-    for link in links['links']:
-        url = link['url']
+        link_content: str = ''
 
-        if not isinstance(url, str):
-            continue
+        if 'links' not in links:
+            return website.get_contents()
 
-        link_website = Website(link['url'])
-        link_content += f"""
-            {link['type']}
-            {link_website.get_contents()}
+        for link in links['links']:
+            if 'url' not in link:
+                continue
+
+            url = link['url']
+
+            if not isinstance(url, str):
+                continue
+
+            link_website = Website(link['url'])
+            link_content += f"""
+                    {link['type']}
+                    {link_website.get_contents()}
+                """
+
+        return f"""
+            Landing Page: {website.get_contents()}
+            {link_content}
         """
 
-    return f"""
-    Landing Page: {website.get_contents()}
-    
-    {link_content}
-    """[:5000]
+    def __make_brochure(self, title: str, link_scan_results: str, brochure_config: dict):
+        brochure_tone = (brochure_config['brochure_tone']
+                         .replace('{tone}', self.TONE))
+        brochure_request = (brochure_config['brochure_request']
+                            .replace('{title}', title)
+                            .replace('{scan_results}', link_scan_results))[:5000]
 
+        brochure_response = self.OPEN_AI_SERVICE.make_request(brochure_tone, brochure_request)
 
-def __make_brochure(website: Website, scan_results: str, open_ai_service: OpenAIService):
-    brochure_request = __create_brochure_request(website, scan_results)
-    brochure_response = open_ai_service.make_request(BROCHURE_SCAN_TONE, brochure_request)
+        if not brochure_response.choices:
+            print("\nAI request failed\n")
+            sys.exit(1)
 
-    if not brochure_response.choices:
-        print("\nAI request failed\n")
-        sys.exit(1)
+        brochure = brochure_response.choices[0].message.content
+        return brochure.replace("```", "").replace("markdown", "")
 
-    brochure = brochure_response.choices[0].message.content
-    brochure = brochure.replace("```", "").replace("markdown", "")
-
-    console = Console()
-    console.print(Markdown(brochure))
-
-
-def create_brochure(url: str, open_ai_service: OpenAIService) -> None:
-    website = Website(url)
-    scan_results = __scan_website(website, open_ai_service)
-    __make_brochure(website, scan_results, open_ai_service)
+    def __display_brochure(self, brochure: str) -> None:
+        console = Console()
+        console.print(Markdown(brochure))

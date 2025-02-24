@@ -1,6 +1,7 @@
 import os
 import sys
 
+from argparse import Namespace
 from openai import OpenAI, Stream
 from dotenv import load_dotenv
 from openai.types.chat import ChatCompletionChunk, ChatCompletion
@@ -55,7 +56,7 @@ class OpenAIService:
 
     MODEL: str
 
-    def __init__(self, args, config: Config):
+    def __init__(self, args: Namespace, config: Config):
         self.DEFAULT_TONE = config.dict['DEFAULTS']['tone']
         self.DEFAULT_REQUEST = config.dict['DEFAULTS']['request']
 

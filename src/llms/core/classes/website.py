@@ -1,5 +1,8 @@
 from bs4 import BeautifulSoup
 import requests
+from requests import Response
+from urllib3.connection import HTTPSConnection
+from urllib3.exceptions import NameResolutionError
 
 headers = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 "
@@ -9,12 +12,22 @@ headers = {
 
 class Website:
     """
-    A utility class to represent a Website that we have scraped, now with links
+    A utility class to represent a Website that we have scraped, now with links.
+    This class is enhanced from https://github.com/ed-donner/llm_engineering
     """
 
     def __init__(self, url: str):
         self.url = url
-        response = requests.get(url, headers=headers)
+
+        try:
+            response = requests.get(url, headers=headers)
+            self.__parse_website(response)
+        except Exception as e:
+            self.title = ""
+            self.text = ""
+            self.links = []
+
+    def __parse_website(self, response: Response):
         self.body = response.content
         soup = BeautifulSoup(self.body, 'html.parser')
         self.title = soup.title.string if soup.title else "No title found"

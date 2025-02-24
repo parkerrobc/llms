@@ -4,20 +4,20 @@ import os
 
 
 class Config:
-    CONFIG_FILE = "app.properties"
+    DEFAULT_CONFIG_FILE = "app.properties"
 
-    def __init__(self):
+    def __init__(self, path: str = ''):
         config = configparser.RawConfigParser()
         config.optionxform = lambda option: option
 
-        path: str = ''
+        file_name = path or self.DEFAULT_CONFIG_FILE
 
         if hasattr(sys, '_MEIPASS'):
-            path = os.path.join(sys._MEIPASS, self.CONFIG_FILE)
-        elif os.path.exists(self.CONFIG_FILE):
-            path = self.CONFIG_FILE
+            path = os.path.join(sys._MEIPASS, file_name)
+        elif os.path.exists(file_name):
+            path = file_name
         else:
-            path = os.getcwd() + '/' + self.CONFIG_FILE
+            path = os.getcwd() + '/' + file_name
 
         config.read(path)
 

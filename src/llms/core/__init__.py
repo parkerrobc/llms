@@ -1,1 +1,1 @@
-from .webscanner import (create_brochure)
+from .webscanner import (WebScanner)

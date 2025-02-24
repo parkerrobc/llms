@@ -2,4 +2,4 @@
 src/.env
 build/*
 dist/*
-*__pycache__/*
+**__pycache__
