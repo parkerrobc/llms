@@ -52,7 +52,11 @@ class WebScanner:
             print("\nAI request failed\n")
             sys.exit(1)
 
-        links = json.loads(link_scan_results.choices[0].message.content)
+        try:
+            links = json.loads(link_scan_results.choices[0].message.content)
+        except Exception as e:
+            print("\nError parsing link scan results: {}\n".format(e))
+            return website.get_contents()
 
         if not links:
             return website.get_contents()
