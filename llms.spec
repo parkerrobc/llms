@@ -5,7 +5,7 @@ a = Analysis(
     ['src/llms.py'],
     pathex=['src/helpers', 'src/llms', 'src/service'],
     binaries=[],
-    datas=[('src/webscanner.properties', '.'), ('src/app.properties', '.'), ('src/.env', '.')],
+    datas=[('src/app.properties', '.'), ('src/.env', '.')],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},

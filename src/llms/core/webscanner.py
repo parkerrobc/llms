@@ -1,18 +1,54 @@
 import json
 import sys
 
-from rich.markdown import Markdown
-from rich.console import Console
+from llms.core.classes import Website
 
-from helpers import Config
-from service import OpenAIService
+from llms.service import OpenAIService
 
-from .classes import Website
+
+def process_links(links: json) -> str:
+    """
+        processes a json object in the following format:
+            {
+                "links" : [
+                    {
+                        "type": str,
+                        "url": str,
+                    }
+                ]
+            }
+
+        this method uses the urls for all links and fetches the webdata,
+        compiles it into a string, and returns said string
+    """
+
+    if not links or 'links' not in links:
+        return ''
+
+    link_content: str = ''
+
+    for link in links['links']:
+        if 'url' not in link or not isinstance(link['url'], str):
+            continue
+
+        link_url = link['url']
+        link_type = link['type'] if 'type' in link else ''
+
+        link_website = Website(link_url)
+        link_content += f"""
+            {link_type}
+            {link_website.get_contents()}
+        """
+
+    return link_content
 
 
 class WebScanner:
-    CONFIG_FILE = 'webscanner.properties'
-    LINK_SCAN_TONE = """
+    """
+        This class uses AI to scan website data
+    """
+
+    SCAN_TONE = """
     You are provided with a list of links found on a webpage.
     You are able to decide which of the links would be most relevant to include in a brochure about the company, 
     such as links to an About page, or a Company page, or Careers/Jobs pages.
@@ -27,85 +63,49 @@ class WebScanner:
     "type" and "url" must be Strings, not an object or array.
     "url" must be a valid https url.
     """
+    SCAN_REQUEST = """
+    Here is the list of links on the website of {url} - please decide which of these are relevant
+    web links for a brochure about the company, respond with the full https URL in JSON format.
+    Do not include Terms of Service, Privacy, email links.
+    Links (some might be relative links):
+    {links}
+    """
 
     OPEN_AI_SERVICE: OpenAIService = None
-    CONFIG: Config = None
+    REQUEST_TOKEN_LIMIT: int = 0
 
-    TONE: str = ''
-
-    def __init__(self, tone: str, open_ai_service: OpenAIService):
-        self.CONFIG = Config(self.CONFIG_FILE)
+    def __init__(self, open_ai_service: OpenAIService, request_token_limit: int = 5000):
+        """
+        :param open_ai_service: -> AI that will scan the website content
+        :param request_token_limit: -> if using paid AI, to reduce cost by limiting size of request
+        """
         self.OPEN_AI_SERVICE = open_ai_service
-        self.TONE = tone or ''
+        self.REQUEST_TOKEN_LIMIT = request_token_limit
 
-    def create_brochure(self, url: str) -> None:
-        brochure_config = self.CONFIG.dict['BROCHURE']
-        website = Website(url)
-        link_scan_results = self.__scan_links(website, brochure_config)
-        brochure = self.__make_brochure(website.title, link_scan_results, brochure_config)
-        self.__display_brochure(brochure)
+    def scan_website(self, website: Website) -> str:
+        """
+        scans a given website using AI and returns details on each important link as a string
 
-    def __scan_links(self, website: Website, brochure_config: dict) -> str:
-        link_scan_request = (brochure_config['link_scan_request']
+        :param website:
+
+        :return:
+        """
+        scan_request = (self.SCAN_REQUEST
                              .replace('{url}', website.title)
-                             .replace('{links}', ", ".join(website.links)))[:5000]
+                             .replace('{links}', ", ".join(website.links)))[:self.REQUEST_TOKEN_LIMIT]
 
-        link_scan_results = self.OPEN_AI_SERVICE.make_request(self.LINK_SCAN_TONE, link_scan_request, True)
+        scan_results = self.OPEN_AI_SERVICE.make_request(self.SCAN_TONE, scan_request, True)
 
-        if not link_scan_results.choices:
+        if not scan_results.choices:
             print("\nAI request failed\n")
             sys.exit(1)
 
         try:
-            links = json.loads(link_scan_results.choices[0].message.content)
+            links = json.loads(scan_results.choices[0].message.content)
         except Exception as e:
             print("\nError parsing link scan results: {}\n".format(e))
             return website.get_contents()
 
-        if not links:
-            return website.get_contents()
+        return f"{website.title}  {website.get_contents()}  {process_links(links)}"
 
-        link_content: str = ''
 
-        if 'links' not in links:
-            return website.get_contents()
-
-        for link in links['links']:
-            if 'url' not in link:
-                continue
-
-            url = link['url']
-
-            if not isinstance(url, str):
-                continue
-
-            link_website = Website(link['url'])
-            link_content += f"""
-                    {link['type']}
-                    {link_website.get_contents()}
-                """
-
-        return f"""
-            Landing Page: {website.get_contents()}
-            {link_content}
-        """
-
-    def __make_brochure(self, title: str, link_scan_results: str, brochure_config: dict):
-        brochure_tone = (brochure_config['brochure_tone']
-                         .replace('{tone}', self.TONE))
-        brochure_request = (brochure_config['brochure_request']
-                            .replace('{title}', title)
-                            .replace('{scan_results}', link_scan_results))[:5000]
-
-        brochure_response = self.OPEN_AI_SERVICE.make_request(brochure_tone, brochure_request)
-
-        if not brochure_response.choices:
-            print("\nAI request failed\n")
-            sys.exit(1)
-
-        brochure = brochure_response.choices[0].message.content
-        return brochure.replace("```", "").replace("markdown", "")
-
-    def __display_brochure(self, brochure: str) -> None:
-        console = Console()
-        console.print(Markdown(brochure))

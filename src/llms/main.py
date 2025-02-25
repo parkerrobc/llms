@@ -1,12 +1,23 @@
 from argparse import Namespace
 
-from service import OpenAIService
-from helpers import Config
+from llms.core import BrochureMaker, WebScanner
+from llms.core.classes import Website
 
-from .core.webscanner import WebScanner
+from llms.service import OpenAIService, display_markdown
+
+from helpers import Config
 
 
 def create_brochure_using_ai(config: Config, args: Namespace) -> None:
     open_ai_service = OpenAIService(args, config)
-    web_scanner = WebScanner(args.tone, open_ai_service)
-    web_scanner.create_brochure(args.url)
+    web_scanner = WebScanner(open_ai_service)
+    brochure_maker = BrochureMaker(args.tone, open_ai_service)
+
+    website = Website(args.url)
+    scan_results = web_scanner.scan_website(website)
+    brochure = brochure_maker.create_brochure(website.title, scan_results)
+
+    display_markdown(brochure)
+    return
+
+
