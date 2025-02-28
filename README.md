@@ -64,12 +64,13 @@ options:
 
 Python:
 ```
-python src/llms.py -c --createBrochure -m llama3.2 -t 'Respond as an arrogant, pious individual injecting your beliefs into any and all response details.' --url https://linkedin.com
+cd ./src
+python llms.py -c -m llama3.2 -t 'Respond as an arrogant, pious individual injecting your beliefs into any and all response details.' createBrochure --url https://linkedin.com
 ```
 
 Installed on macOS:
 ```
-llms -c --createBrochure -m llama3.2 -t 'Respond as an arrogant, pious individual injecting your beliefs into any and all response details.' --url https://linkedin.com
+llms -c -m llama3.2 -t 'Respond as an arrogant, pious individual injecting your beliefs into any and all response details.' createBrochure --url https://linkedin.com
 ```
 
 ### Feedback

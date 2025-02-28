@@ -26,4 +26,4 @@ def create_brochure(args: Namespace) -> None:
 def simple_request(args: Namespace) -> None:
     open_ai_service = OpenAIService(args, config)
     response = open_ai_service.make_request(args.tone, args.request)
-    print(response)
+    print(response.choices[0].message.content)

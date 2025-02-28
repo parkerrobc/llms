@@ -74,19 +74,15 @@ class OpenAIService:
         self.MODEL = args.model
 
     def message_builder(self, tone: str, request: str) -> []:
-        messages = []
-
-        if tone:
-            messages.append({
+        messages = [{
                 "role": "system",
                 "content": tone or self.DEFAULT_TONE
-            })
-
-        if request:
-            messages.append({
+            },
+            {
                 "role": "user",
                 "content": (request or self.DEFAULT_REQUEST)[:self.REQUEST_CHAR_LIMIT]
-            })
+            }
+        ]
 
         return messages
 
