@@ -1,2 +1,2 @@
-from .main import create_brochure_using_ai
+from .main import create_brochure, simple_request
 

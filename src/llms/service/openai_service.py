@@ -55,10 +55,12 @@ class OpenAIService:
     DEFAULT_REQUEST: str
 
     MODEL: str
+    REQUEST_CHAR_LIMIT: int = 0
 
     def __init__(self, args: Namespace, config: Config):
         self.DEFAULT_TONE = config.dict['DEFAULTS']['tone']
         self.DEFAULT_REQUEST = config.dict['DEFAULTS']['request']
+        self.REQUEST_CHAR_LIMIT = args.requestCharLimit or 5000
 
         ai_config: dict
 
@@ -83,7 +85,7 @@ class OpenAIService:
         if request:
             messages.append({
                 "role": "user",
-                "content": request or self.DEFAULT_REQUEST
+                "content": (request or self.DEFAULT_REQUEST)[:self.REQUEST_CHAR_LIMIT]
             })
 
         return messages

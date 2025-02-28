@@ -72,15 +72,12 @@ class WebScanner:
     """
 
     OPEN_AI_SERVICE: OpenAIService = None
-    REQUEST_TOKEN_LIMIT: int = 0
 
-    def __init__(self, open_ai_service: OpenAIService, request_token_limit: int = 5000):
+    def __init__(self, open_ai_service: OpenAIService):
         """
         :param open_ai_service: -> AI that will scan the website content
-        :param request_token_limit: -> if using paid AI, to reduce cost by limiting size of request
         """
         self.OPEN_AI_SERVICE = open_ai_service
-        self.REQUEST_TOKEN_LIMIT = request_token_limit
 
     def scan_website(self, website: Website) -> str:
         """
@@ -88,11 +85,11 @@ class WebScanner:
 
         :param website:
 
-        :return:
+        :return: -> str containing details about the website
         """
         scan_request = (self.SCAN_REQUEST
-                             .replace('{url}', website.title)
-                             .replace('{links}', ", ".join(website.links)))[:self.REQUEST_TOKEN_LIMIT]
+                        .replace('{url}', website.title)
+                        .replace('{links}', ", ".join(website.links)))
 
         scan_results = self.OPEN_AI_SERVICE.make_request(self.SCAN_TONE, scan_request, True)
 
@@ -107,5 +104,3 @@ class WebScanner:
             return website.get_contents()
 
         return f"{website.title}  {website.get_contents()}  {process_links(links)}"
-
-

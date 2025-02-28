@@ -40,19 +40,24 @@ Project is set up to use Anaconda with an `environment.yml` file and PyInstaller
 ##### Options
 
 ```
+usage: llms [options]
+
+positional arguments:
+  {createBrochure,simpleRequest}
+                        Available commands
+    createBrochure      create brochure using ai
+    simpleRequest       makes simple request to llm
+
 options:
   -h, --help            show this help message and exit
   -c, --custom, --no-custom
-                        connects to llm with [CUSTOM_AI] in app.properties llm must be compatible OpenAI libraries default will connect to OpenAI directly using [OPEN_AI] configin app.properties or .env file with OPEN_API_KEY
+                        connects to llm with [CUSTOM_AI] properties, [OPEN_AI] is default
   -m MODEL, --model MODEL
                         language model to use. ex: -m llama3.2
-  -r REQUEST, --request REQUEST
-                        request you want to send to the llm. ex: -r 'Help me understand why puppies eat things they aren't supposed to'
+  -rcl [REQUESTCHARLIMIT], --requestCharLimit [REQUESTCHARLIMIT]
+                        limits the request size to the llm: default is 5000
   -t [TONE], --tone [TONE]
-                        tone that the model will respond with. ex: -t 'Being a pretentious ass-hat, you are disgusted with mortal men asking, what you believe to be, dumb questions.'
-  --createBrochure, --no-createBrochure
-                        creates brochure using llm
-  --url [URL]           url to process
+                        tone that the llm should respond with
 ```
 
 ##### Example Usage:
