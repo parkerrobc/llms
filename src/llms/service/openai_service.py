@@ -3,7 +3,7 @@ import sys
 
 from argparse import Namespace
 from openai import OpenAI, Stream
-from dotenv import load_dotenv
+
 from openai.types.chat import ChatCompletionChunk, ChatCompletion
 
 from helpers import Config
@@ -15,7 +15,6 @@ def check_key(custom: bool, config: dict) -> str:
     if custom:
         api_key = config['key']
     else:
-        load_dotenv(override=True)
         api_key = config['key'] or os.getenv('OPENAI_API_KEY')
 
     if api_key and custom:
