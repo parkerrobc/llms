@@ -1,6 +1,6 @@
 from argparse import Namespace
 
-from llms.core import BrochureMaker, WebScanner
+from llms.core import BrochureMaker, WebScanner, Joker
 from llms.core.classes import Website
 
 from llms.service import OpenAIService, display_markdown
@@ -27,3 +27,10 @@ def simple_request(args: Namespace) -> None:
     open_ai_service = OpenAIService(args, config)
     response = open_ai_service.make_request(args.tone, args.request)
     print(response.choices[0].message.content)
+
+
+def make_joke(args: Namespace) -> None:
+    open_ai_service = OpenAIService(args, config)
+    joker = Joker(args.tone, args.jokeType, args.audience, open_ai_service)
+    joke = joker.tell_joke()
+    print(joke)

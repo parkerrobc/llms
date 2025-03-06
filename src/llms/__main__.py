@@ -1,7 +1,7 @@
 import argparse
 import sys
 
-from llms import create_brochure, simple_request
+from llms import create_brochure, simple_request, make_joke
 
 
 def main() -> int:
@@ -24,6 +24,11 @@ def main() -> int:
     simple_request_parser = subparsers.add_parser('simpleRequest', help="makes simple request to llm")
     simple_request_parser.set_defaults(func=simple_request)
     simple_request_parser.add_argument("-r", "--request", type=str, nargs='?')
+
+    make_joke_parser = subparsers.add_parser('makeJoke', help='makes joke using ai')
+    make_joke_parser.set_defaults(func=make_joke)
+    make_joke_parser.add_argument("-jt", "--jokeType", type=str, required=True)
+    make_joke_parser.add_argument("-a", "--audience", type=str, required=True)
 
     args = parser.parse_args()
     args.func(args)
