@@ -22,13 +22,15 @@ Project is set up to use Anaconda with an `environment.yml` file and PyInstaller
 3. Update `./src/app.json` with default configuration
    ```json
    {
-      "tone": "As a casual, laid-back fellow, answer any inquiry with whit and an aura of charm.",
-      "request": "Tell me about yourself.",
-      "model": "llama3.2",
-      "library": "openai",
-      "baseUrl": "http://localhost:11434/v1",
-      "key": "ollama",
-      "requestCharLimit": 5000
+     "tone": "As a casual, laid-back fellow, answer any inquiry with whit and an aura of charm.",
+     "request": "Tell me about yourself.",
+     "model": "llama3.2",
+     "library": "openai",
+     "baseUrl": "http://localhost:11434/v1",
+     "key": "ollama",
+     "requestCharLimit": 5000,
+     "maxTokens": 200,
+     "temperature": 0.7
    }
    ```
 4. (Only for macOS at this time) If you wish to compile and install this to your `/usr/local/bin`, run the `macos_build_install.sh` script
@@ -53,8 +55,6 @@ options:
   -h, --help            show this help message and exit
   -p PROVIDER, --provider PROVIDER
                         provider to use. ex: -p app
-  -rcl [REQUESTCHARLIMIT], --requestCharLimit [REQUESTCHARLIMIT]
-                        limits the request size to the llm: default is 5000
   -t [TONE], --tone [TONE]
                         tone that the llm should respond with
 ```
