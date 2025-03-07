@@ -80,7 +80,9 @@ Your custom json files must match this format:
    "library": "openai", // see from list of libraries above
    "baseUrl": "http://localhost:11434/v1", // you can leave this blank if you wish to call out to OpenAI directly
    "key": "ollama", // this would be your api_key that initializes the openai library
-   "requestCharLimit": 5000 // this limits the size of each request to the llm to reduce cost. detault in the code is 100000
+   "requestCharLimit": 5000, // this limits the size of each request to the llm to reduce cost. detault in the code is 100000
+   "maxTokens": 200,
+   "temperature": 0.7
 }
 ```
 
