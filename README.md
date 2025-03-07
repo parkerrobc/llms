@@ -89,7 +89,7 @@ Your custom json files must match this format:
 Adding file:
 
 ```bash
-llms addConfig yourProvider.json
+llms addConfig -f yourProvider.json
 ```
 
 ##### Example Usage:
