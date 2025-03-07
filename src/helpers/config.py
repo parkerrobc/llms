@@ -1,11 +1,25 @@
-import configparser
+import json
+import shutil
 import sys
 import os
+from pathlib import Path
 from dotenv import load_dotenv
 
+PROFILE_DIR = Path.home()
+USER_CONFIG_DIR = os.path.join(PROFILE_DIR, '.llms')
 
-def resource_path(file_name: str = ''):
-    if hasattr(sys, '_MEIPASS'):
+if not os.path.exists(USER_CONFIG_DIR):
+    os.makedirs(USER_CONFIG_DIR)
+
+DEFAULT_CONF_FILE = 'app.json'
+ENV_FILE = '.env'
+
+
+def __resource_path(file_name: str = ''):
+    if os.path.exists(os.path.join(USER_CONFIG_DIR, file_name)):
+        return os.path.join(USER_CONFIG_DIR, file_name)
+    elif (hasattr(sys, '_MEIPASS')
+            and os.path.exists(os.path.join(sys._MEIPASS, file_name))):
         return os.path.join(sys._MEIPASS, file_name)
     elif os.path.exists(file_name):
         return file_name
@@ -13,36 +27,40 @@ def resource_path(file_name: str = ''):
         return os.getcwd() + '/' + file_name
 
 
-class NoneDict(dict):
-    def __getitem__(self, key):
-        return dict.get(self, key)
+def load_env() -> None:
+    load_dotenv(dotenv_path=__resource_path(ENV_FILE))
 
 
-class Config:
-    DEFAULT_CONFIG_FILE = "app.properties"
-    ENV_FILE = ".env"
-    dict: NoneDict
+def load_conf(conf_name: str = '') -> dict:
+    file = __resource_path(f'{conf_name}.json')
 
-    def __init__(self, file_name: str = ''):
-        config = configparser.RawConfigParser()
-        config.optionxform = lambda option: option
+    if not os.path.exists(file):
+        print(f'*** configuration {'for' + conf_name if conf_name else ''}'
+              f'not found. loading default {DEFAULT_CONF_FILE} ***\n')
+        file = __resource_path(DEFAULT_CONF_FILE)
 
-        config_file_name = file_name or self.DEFAULT_CONFIG_FILE
-        config_file_path = resource_path(config_file_name)
-        config.read(config_file_path)
+    with open(file, 'r') as f:
+        conf = json.load(f)
 
-        def get_config_section():
-            if not hasattr(get_config_section, 'section_dict'):
-                get_config_section.section_dict = dict()
+    return conf
 
-                for section in config.sections():
-                    get_config_section.section_dict[section] = NoneDict(dict(config.items(section)))
 
-            return get_config_section.section_dict
+def add_update_conf(file: str) -> None:
+    if not os.path.exists(file):
+        file = os.path.join(os.getcwd(), file)
 
-        self.dict = NoneDict(get_config_section())
+    if not os.path.exists(file):
+        print('File not found', file)
+        sys.exit(1)
 
-        env_file_name = self.ENV_FILE
-        env_file_path = resource_path(env_file_name)
-        load_dotenv(dotenv_path=env_file_path)
+    file_name = os.path.basename(file)
+    shutil.copy(file, os.path.join(USER_CONFIG_DIR, file_name))
+
+
+def view_user_conf() -> None:
+    if not os.path.exists(USER_CONFIG_DIR):
+        print('No user configurations exist')
+        sys.exit(1)
+
+    print(os.listdir(USER_CONFIG_DIR))
 

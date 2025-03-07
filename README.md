@@ -11,66 +11,93 @@ Project is set up to use Anaconda with an `environment.yml` file and PyInstaller
 ##### Set up
 
 1. Install and activate conda environment
-    ```
+    ```bash
    conda env create --file environment.yml
    conda activate ai_llms
    ```
 2. Create `.env` file with your OpenAIApiKey and place it into the `src` directory (you can set this in the `app.properties` file if you wish not to create this)
-   ```
+   ```text
    OPEN_AI_KEY=<yourOpenAIApiKey>
    ```
-3. Update `./src/app.properties`
-   ```
-   [DEFAULTS]
-   tone=<thisIsTheDefaultSystemPromptUsedInRequestToLLM>
-   request=<thisIsTheDefaultUserPromptUsedInRequestToLLM>
-
-   [OPEN_AI]
-   key=<yourOpenAIApiKeyIfYouWantToAddItHereInsteadOfCreatingEnvFile>
-
-   [CUSTOM_AI]
-   baseUrl=<urlToCustomLLMOrOtherLLMThatUsesTheOpenAIApiFormat>
-   key=<keyForSaidLLM>
+3. Update `./src/app.json` with default configuration
+   ```json
+   {
+      "tone": "As a casual, laid-back fellow, answer any inquiry with whit and an aura of charm.",
+      "request": "Tell me about yourself.",
+      "model": "llama3.2",
+      "library": "openai",
+      "baseUrl": "http://localhost:11434/v1",
+      "key": "ollama",
+      "requestCharLimit": 5000
+   }
    ```
 4. (Only for macOS at this time) If you wish to compile and install this to your `/usr/local/bin`, run the `macos_build_install.sh` script
-   ```
+   ```bash
    ./macos_build_install.sh
    ```
 
 ##### Options
-
 ```
 usage: llms [options]
 
 positional arguments:
-  {createBrochure,simpleRequest}
+  {createBrochure,simpleRequest,makeJoke,addConfig,listConfig}
                         Available commands
     createBrochure      create brochure using ai
     simpleRequest       makes simple request to llm
+    makeJoke            makes joke using ai
+    addConfig           add config to llm
+    listConfig          list llms configurations
 
 options:
   -h, --help            show this help message and exit
-  -c, --custom, --no-custom
-                        connects to llm with [CUSTOM_AI] properties, [OPEN_AI] is default
-  -m MODEL, --model MODEL
-                        language model to use. ex: -m llama3.2
+  -p PROVIDER, --provider PROVIDER
+                        provider to use. ex: -p app
   -rcl [REQUESTCHARLIMIT], --requestCharLimit [REQUESTCHARLIMIT]
                         limits the request size to the llm: default is 5000
   -t [TONE], --tone [TONE]
                         tone that the llm should respond with
 ```
 
+##### Configurations
+
+You can now create different provider configuration json files and add them to your application directory `PROFILE_DIR = Path.home() / '.llms'`.
+
+The files should be named `<yourProvider>.json`. The `<yourProvider>` will be what you will pass to the `-p` option when running.
+
+As of now, there is only one library that this works for `openai`.
+
+Your custom json files must match this format:
+
+```json
+{
+   "tone": "As a casual, laid-back fellow, answer any inquiry with whit and an aura of charm.", // default tone that the llm should respond with
+   "request": "Tell me about yourself.", // default request
+   "model": "llama3.2", // this will be the model used with the openai library
+   "library": "openai", // this is currently the only supported library
+   "baseUrl": "http://localhost:11434/v1", // you can leave this blank if you wish to call out to OpenAI directly
+   "key": "ollama", // this would be your api_key that initializes the openai library
+   "requestCharLimit": 5000 // this limits the size of each request to the llm to reduce cost. detault in the code is 100000
+}
+```
+
+Adding file:
+
+```bash
+llms addConfig yourProvider.json
+```
+
 ##### Example Usage:
 
 Python:
-```
+```bash
 cd ./src
-python llms.py -c -m llama3.2 -t 'Respond as an arrogant, pious individual injecting your beliefs into any and all response details.' createBrochure --url https://linkedin.com
+python llms.py -p yourProvider -t 'Respond as an arrogant, pious individual injecting your beliefs into any and all response details.' createBrochure --url https://linkedin.com
 ```
 
 Installed on macOS:
-```
-llms -c -m llama3.2 -t 'Respond as an arrogant, pious individual injecting your beliefs into any and all response details.' createBrochure --url https://linkedin.com
+```bash
+llms -p yourProvider -t 'Respond as an arrogant, pious individual injecting your beliefs into any and all response details.' createBrochure --url https://linkedin.com
 ```
 
 ### Feedback

@@ -1,9 +1,8 @@
 import json
-import sys
 
 from llms.core.classes import Website
 
-from llms.service import OpenAIService
+from llms.service import AIService
 
 
 def process_links(links: json) -> str:
@@ -71,13 +70,13 @@ class WebScanner:
     {links}
     """
 
-    OPEN_AI_SERVICE: OpenAIService = None
+    AI_SERVICE: AIService = None
 
-    def __init__(self, open_ai_service: OpenAIService):
+    def __init__(self, ai_service: AIService):
         """
-        :param open_ai_service: -> AI that will scan the website content
+        :param ai_service: -> AI service that will scan the website content
         """
-        self.OPEN_AI_SERVICE = open_ai_service
+        self.AI_SERVICE = ai_service
 
     def scan_website(self, website: Website) -> str:
         """
@@ -91,14 +90,10 @@ class WebScanner:
                         .replace('{url}', website.title)
                         .replace('{links}', ", ".join(website.links)))
 
-        scan_results = self.OPEN_AI_SERVICE.make_request(self.SCAN_TONE, scan_request, True)
-
-        if not scan_results.choices:
-            print("\nAI request failed\n")
-            sys.exit(1)
+        scan_results = self.AI_SERVICE.make_request(self.SCAN_TONE, scan_request, True)
 
         try:
-            links = json.loads(scan_results.choices[0].message.content)
+            links = json.loads(next(scan_results))
         except Exception as e:
             print("\nError parsing link scan results: {}\n".format(e))
             return website.get_contents()

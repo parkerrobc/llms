@@ -1,2 +1,2 @@
-from .openai_service import OpenAIService
+from .ai_service import AIService, AIProtocol
 from .display_service import display_markdown

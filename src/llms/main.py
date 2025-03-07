@@ -3,34 +3,55 @@ from argparse import Namespace
 from llms.core import BrochureMaker, WebScanner, Joker
 from llms.core.classes import Website
 
-from llms.service import OpenAIService, display_markdown
+from llms.service import AIService, display_markdown
 
-from helpers import Config
+from helpers import load_env, add_update_conf, view_user_conf
 
-config = Config()
+"""
+load environment variables
+"""
+load_env()
 
 
 def create_brochure(args: Namespace) -> None:
-    open_ai_service = OpenAIService(args, config)
-    web_scanner = WebScanner(open_ai_service)
-    brochure_maker = BrochureMaker(args.tone, open_ai_service)
-
+    ai_service = AIService(args.provider, args.requestCharLimit)
+    web_scanner = WebScanner(ai_service)
+    brochure_maker = BrochureMaker(args.tone, ai_service)
     website = Website(args.url)
+
     scan_results = web_scanner.scan_website(website)
     brochure = brochure_maker.create_brochure(website.title, scan_results)
-
     display_markdown(brochure)
+
     return
 
 
 def simple_request(args: Namespace) -> None:
-    open_ai_service = OpenAIService(args, config)
-    response = open_ai_service.make_request(args.tone, args.request)
-    print(response.choices[0].message.content)
+    ai_service = AIService(args.provider, args.requestCharLimit)
+    response = ai_service.make_request(args.tone, args.request)
+
+    for value in response:
+        print(f'{value}\n')
+
+    return
 
 
 def make_joke(args: Namespace) -> None:
-    open_ai_service = OpenAIService(args, config)
-    joker = Joker(args.tone, args.jokeType, args.audience, open_ai_service)
+    ai_service = AIService(args.provider, args.requestCharLimit)
+    joker = Joker(args.tone, args.jokeType, args.audience, ai_service)
+
     joke = joker.tell_joke()
+
     print(joke)
+
+    return
+
+
+def add_config(args: Namespace) -> None:
+    add_update_conf(args.file)
+    return
+
+
+def list_config(args: Namespace) -> None:
+    view_user_conf()
+    return

@@ -1,8 +1,6 @@
 from bs4 import BeautifulSoup
 import requests
 from requests import Response
-from urllib3.connection import HTTPSConnection
-from urllib3.exceptions import NameResolutionError
 
 headers = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 "

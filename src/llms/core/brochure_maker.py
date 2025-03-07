@@ -1,6 +1,4 @@
-import sys
-
-from llms.service import OpenAIService
+from llms.service import AIService
 
 
 class BrochureMaker:
@@ -20,16 +18,16 @@ class BrochureMaker:
     {details}
     """
 
-    OPEN_AI_SERVICE: OpenAIService = None
+    AI_SERVICE: AIService = None
 
     TONE: str = ''
 
-    def __init__(self, tone: str, open_ai_service: OpenAIService) -> None:
+    def __init__(self, tone: str, ai_service: AIService) -> None:
         """
         :param tone: -> tone of the brochure
-        :param open_ai_service: -> AI that will create the brochure
+        :param ai_service: -> AI service that will create the brochure
         """
-        self.OPEN_AI_SERVICE = open_ai_service
+        self.AI_SERVICE = ai_service
         self.TONE = f"{self.BROCHURE_TONE}  {tone}" if tone else self.BROCHURE_TONE
 
     def create_brochure(self, title: str, details: str) -> str:
@@ -42,10 +40,6 @@ class BrochureMaker:
             :return: str -> the brochure as a markdown string
         """
         brochure_request = self.BROCHURE_REQUEST.replace('{title}', title).replace('{details}', details)
-        brochure_response = self.OPEN_AI_SERVICE.make_request(self.TONE, brochure_request)
+        brochure_response = self.AI_SERVICE.make_request(self.TONE, brochure_request)
 
-        if not brochure_response.choices:
-            print("\nAI request failed\n")
-            sys.exit(1)
-
-        return brochure_response.choices[0].message.content.replace("```", "").replace("markdown", "")
+        return next(brochure_response).replace("```", "").replace("markdown", "")

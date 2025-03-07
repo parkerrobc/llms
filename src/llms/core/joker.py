@@ -1,6 +1,4 @@
-import sys
-
-from llms.service import OpenAIService
+from llms.service import AIService
 
 
 class Joker:
@@ -15,29 +13,22 @@ class Joker:
     Tell a {joke_type} joke for an audience of {audience}.
     """
 
-    OPEN_AI_SERVICE: OpenAIService = None
+    AIService: AIService = None
 
     TONE: str = ''
     REQUEST: str = ''
 
-    def __init__(self, tone: str, joke_type: str, audience: str, open_ai_service: OpenAIService) -> None:
+    def __init__(self, tone: str, joke_type: str, audience: str, ai_service: AIService) -> None:
         """
         :param tone: -> tone of the joke
-        :param open_ai_service: -> AI that will make the joke
+        :param ai_service: -> AI service that will make the joke
         """
-        self.OPEN_AI_SERVICE = open_ai_service
+        self.AI_SERVICE = ai_service
         self.TONE = f"{self.JOKE_TONE} {tone}" if tone else self.JOKE_TONE
         self.REQUEST = self.JOKE_REQUEST.replace('{joke_type}', joke_type).replace('{audience}', audience)
-        print(self.REQUEST)
 
     def tell_joke(self) -> str:
         """
         :return: -> str the joke
         """
-        joke_response = self.OPEN_AI_SERVICE.make_request(self.TONE, self.REQUEST)
-
-        if not joke_response.choices:
-            print("\nAI request failed\n")
-            sys.exit(1)
-
-        return joke_response.choices[0].message.content
+        return next(self.AI_SERVICE.make_request(self.TONE, self.REQUEST))
