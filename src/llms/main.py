@@ -14,7 +14,7 @@ load_env()
 
 
 def create_brochure(args: Namespace) -> None:
-    ai_service = AIService(args.provider, args.requestCharLimit)
+    ai_service = AIService(args.provider)
     web_scanner = WebScanner(ai_service)
     brochure_maker = BrochureMaker(args.tone, ai_service)
     website = Website(args.url)
@@ -27,7 +27,7 @@ def create_brochure(args: Namespace) -> None:
 
 
 def simple_request(args: Namespace) -> None:
-    ai_service = AIService(args.provider, args.requestCharLimit)
+    ai_service = AIService(args.provider)
     response = ai_service.make_request(args.tone, args.request)
 
     for value in response:
@@ -37,7 +37,7 @@ def simple_request(args: Namespace) -> None:
 
 
 def make_joke(args: Namespace) -> None:
-    ai_service = AIService(args.provider, args.requestCharLimit)
+    ai_service = AIService(args.provider)
     joker = Joker(args.tone, args.jokeType, args.audience, ai_service)
 
     joke = joker.tell_joke()

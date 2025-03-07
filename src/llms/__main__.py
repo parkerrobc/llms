@@ -10,8 +10,6 @@ def main() -> int:
 
     parser.add_argument("-p", "--provider", type=str,
                         help="provider to use. ex: -p app")
-    parser.add_argument("-rcl", "--requestCharLimit", type=int, nargs='?',
-                        help="limits the request size to the llm: default is 5000")
     parser.add_argument("-t", "--tone", type=str, nargs='?',
                         help="tone that the llm should respond with")
 

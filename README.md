@@ -65,7 +65,10 @@ You can now create different provider configuration json files and add them to y
 
 The files should be named `<yourProvider>.json`. The `<yourProvider>` will be what you will pass to the `-p` option when running.
 
-As of now, there is only one library that this works for `openai`.
+Supported libraries:
+   * `openai`
+   * `google`
+   * `anthropic`
 
 Your custom json files must match this format:
 
@@ -74,7 +77,7 @@ Your custom json files must match this format:
    "tone": "As a casual, laid-back fellow, answer any inquiry with whit and an aura of charm.", // default tone that the llm should respond with
    "request": "Tell me about yourself.", // default request
    "model": "llama3.2", // this will be the model used with the openai library
-   "library": "openai", // this is currently the only supported library
+   "library": "openai", // see from list of libraries above
    "baseUrl": "http://localhost:11434/v1", // you can leave this blank if you wish to call out to OpenAI directly
    "key": "ollama", // this would be your api_key that initializes the openai library
    "requestCharLimit": 5000 // this limits the size of each request to the llm to reduce cost. detault in the code is 100000

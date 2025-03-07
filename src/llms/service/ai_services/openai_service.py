@@ -2,15 +2,14 @@ import sys
 
 from openai import OpenAI
 
-from .ai_protocol import AIProtocol
+from .ai_abc import AIAbstractClass, OpenAIConfig
 
 
-class OpenAIService(AIProtocol):
+class OpenAIService(AIAbstractClass):
     OPENAI: OpenAI
 
-    def initialize(self) -> None:
-        config = self.CONFIG
-
+    def __init__(self, config: OpenAIConfig):
+        super().__init__(config)
         if config['baseUrl'] and config['key']:
             self.OPENAI = OpenAI(base_url=config['baseUrl'], api_key=config['key'])
         elif config['baseUrl']:
@@ -21,13 +20,19 @@ class OpenAIService(AIProtocol):
             self.OPENAI = OpenAI()
 
     def message_builder(self, tone: str, request: str) -> []:
-        messages = [{
-            "role": "system",
-            "content": tone or self.DEFAULT_TONE
-        },
+        system_content = tone or self.config['tone']
+        user_content = (request or self.config['request']) \
+            if self.request_char_limit <= 0 \
+            else (request or self.config['request'])[:self.request_char_limit]
+
+        messages = [
+            {
+                "role": "system",
+                "content": system_content
+            },
             {
                 "role": "user",
-                "content": (request or self.DEFAULT_REQUEST)[:self.REQUEST_CHAR_LIMIT]
+                "content": user_content
             }
         ]
 
@@ -37,7 +42,7 @@ class OpenAIService(AIProtocol):
         messages = self.message_builder(tone, request)
 
         method_args: dict = {
-            'model': self.MODEL,
+            'model': self.config['model'],
             'messages': messages,
         }
 
@@ -45,6 +50,8 @@ class OpenAIService(AIProtocol):
             method_args.__setitem__('response_format', {"type": "json_object"})
         if stream:
             method_args.__setitem__('stream', True)
+        if self.config['temperature']:
+            method_args.__setitem__('temperature', self.config['temperature'])
 
         response = self.OPENAI.chat.completions.create(**method_args)
 
@@ -59,5 +66,3 @@ class OpenAIService(AIProtocol):
         else:
             for choice in response.choices:
                 yield choice.message.content or ''
-
-

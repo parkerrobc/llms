@@ -5,5 +5,7 @@
   "library": "openai",
   "baseUrl": "http://localhost:11434/v1",
   "key": "ollama",
-  "requestCharLimit": 5000
+  "requestCharLimit": 5000,
+  "maxTokens": 200,
+  "temperature": 0.7
 }
