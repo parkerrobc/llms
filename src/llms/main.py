@@ -22,7 +22,6 @@ def create_brochure(args: Namespace) -> None:
     scan_results = web_scanner.scan_website(website)
     brochure = brochure_maker.create_brochure(website.title, scan_results)
     display_markdown(brochure)
-
     return
 
 
@@ -43,7 +42,6 @@ def make_joke(args: Namespace) -> None:
     joke = joker.tell_joke()
 
     print(joke)
-
     return
 
 
