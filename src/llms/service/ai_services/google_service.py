@@ -4,8 +4,8 @@ from .ai_abc import AIAbstractClass, GoogleConfig
 
 
 class GoogleService(AIAbstractClass):
-    def __init__(self, config: GoogleConfig) -> None:
-        super().__init__(config)
+    def __init__(self, config: GoogleConfig, tone: str) -> None:
+        super().__init__(config, tone)
         if config['key']:
             google.generativeai.configure(api_key=config['key'])
         else:
@@ -20,7 +20,7 @@ class GoogleService(AIAbstractClass):
 
         method_args: dict = {
             'model_name': self.config['model'],
-            'system_instruction': tone or self.config['tone']
+            'system_instruction': tone or self.tone
         }
 
         llm = google.generativeai.GenerativeModel(**method_args)

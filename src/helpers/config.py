@@ -57,10 +57,14 @@ def add_update_conf(file: str) -> None:
     shutil.copy(file, os.path.join(USER_CONFIG_DIR, file_name))
 
 
-def view_user_conf() -> None:
+def view_user_conf() -> [str]:
     if not os.path.exists(USER_CONFIG_DIR):
         print('No user configurations exist')
         sys.exit(1)
 
-    print(os.listdir(USER_CONFIG_DIR))
+    files = os.listdir(USER_CONFIG_DIR)
+
+    file_names = [os.path.splitext(file)[0] for file in files]
+
+    return file_names
 

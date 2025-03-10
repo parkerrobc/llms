@@ -51,5 +51,9 @@ def add_config(args: Namespace) -> None:
 
 
 def list_config(args: Namespace) -> None:
-    view_user_conf()
+    file_names = view_user_conf()
+
+    for file_name in file_names:
+        print(file_name)
+
     return

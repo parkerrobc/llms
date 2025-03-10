@@ -8,8 +8,8 @@ from .ai_abc import AIAbstractClass, AnthropicConfig
 class AnthropicService(AIAbstractClass):
     ANTHROPIC: anthropic.Anthropic
 
-    def __init__(self, config: AnthropicConfig):
-        super().__init__(config)
+    def __init__(self, config: AnthropicConfig, tone: str):
+        super().__init__(config, tone)
         if config['key']:
             self.ANTHROPIC = anthropic.Anthropic(api_key=config['key'])
         else:
@@ -59,7 +59,7 @@ class AnthropicService(AIAbstractClass):
             'model': self.config['model'],
             'max_tokens': self.config['maxTokens'],
             'temperature': self.config['temperature'],
-            'system': tone or self.config['tone'],
+            'system': tone or self.tone,
             'messages': messages,
         }
 

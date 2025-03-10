@@ -20,7 +20,7 @@ class OpenAIService(AIAbstractClass):
             self.OPENAI = OpenAI()
 
     def message_builder(self, tone: str, request: str) -> []:
-        system_content = tone or self.config['tone']
+        system_content = f"{self.tone}. {tone}" if tone else self.tone
         user_content = (request or self.config['request']) \
             if self.request_char_limit <= 0 \
             else (request or self.config['request'])[:self.request_char_limit]

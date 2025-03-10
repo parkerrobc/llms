@@ -37,8 +37,9 @@ class AIAbstractClass(ABC):
     config: AnthropicConfig | OpenAIConfig = None
 
     @abstractmethod
-    def __init__(self, config: AnthropicConfig | OpenAIConfig | GoogleConfig) -> None:
+    def __init__(self, config: AnthropicConfig | OpenAIConfig | GoogleConfig, tone: str = '') -> None:
         self.config = config
+        self.tone = tone or config['tone']
         self.request_char_limit = config['requestCharLimit'] or 0
 
     @abstractmethod
