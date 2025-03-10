@@ -43,6 +43,8 @@ Project is set up to use Anaconda with an `environment.yml` file and PyInstaller
 usage: llms [options]
 
 positional arguments:
+  {-,anthropic,openai,google}
+                        provider to use.
   {createBrochure,simpleRequest,makeJoke,addConfig,listConfig}
                         Available commands
     createBrochure      create brochure using ai
@@ -53,10 +55,9 @@ positional arguments:
 
 options:
   -h, --help            show this help message and exit
-  -p PROVIDER, --provider PROVIDER
-                        provider to use. ex: -p app
   -t [TONE], --tone [TONE]
                         tone that the llm should respond with
+
 ```
 
 ##### Configurations
@@ -97,12 +98,12 @@ llms addConfig -f yourProvider.json
 Python:
 ```bash
 cd ./src
-python llms.py -p yourProvider -t 'Respond as an arrogant, pious individual injecting your beliefs into any and all response details.' createBrochure --url https://linkedin.com
+python llms.py yourProvider -t 'Respond as an arrogant, pious individual injecting your beliefs into any and all response details.' createBrochure https://linkedin.com
 ```
 
 Installed on macOS:
 ```bash
-llms -p yourProvider -t 'Respond as an arrogant, pious individual injecting your beliefs into any and all response details.' createBrochure --url https://linkedin.com
+llms yourProvider -t 'Respond as an arrogant, pious individual injecting your beliefs into any and all response details.' createBrochure https://linkedin.com
 ```
 
 ### Feedback
