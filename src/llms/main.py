@@ -1,4 +1,5 @@
 from argparse import Namespace
+import uuid
 
 from llms.core import BrochureMaker, WebScanner, Joker
 from llms.core.battle import Battle
@@ -52,7 +53,8 @@ def battle(args: Namespace) -> None:
     models: [Model] = [{'name': start_name, 'service': ai_service, 'firstMessage': args.firstMessage}]
 
     for model in args.models:
-        name = f'{args.models.index(model)}-{'default' if model == '-' else model}'
+        my_uuid = uuid.uuid4()
+        name = f'{'default' if model == '-' else model}-{my_uuid}'
         models.append({'name': name, 'service': AIService(model), 'firstMessage': ''})
 
     battle = Battle(models)
