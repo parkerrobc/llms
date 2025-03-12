@@ -45,11 +45,12 @@ usage: llms [options]
 positional arguments:
   {-,anthropic,openai,google}
                         provider to use.
-  {createBrochure,simpleRequest,makeJoke,addConfig,listConfig}
+  {createBrochure,simpleRequest,makeJoke,battle,addConfig,listConfig}
                         Available commands
     createBrochure      create brochure using ai
     simpleRequest       makes simple request to llm
     makeJoke            makes joke using ai
+    battle              battle between different llms
     addConfig           add config to llm
     listConfig          list llms configurations
 
@@ -57,7 +58,6 @@ options:
   -h, --help            show this help message and exit
   -t [TONE], --tone [TONE]
                         tone that the llm should respond with
-
 ```
 
 ##### Configurations

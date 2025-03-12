@@ -1,7 +1,8 @@
 from argparse import Namespace
 
 from llms.core import BrochureMaker, WebScanner, Joker
-from llms.core.classes import Website
+from llms.core.battle import Battle
+from llms.core.classes import Website, Model
 
 from llms.service import AIService, display_markdown
 
@@ -43,6 +44,19 @@ def make_joke(args: Namespace) -> None:
 
     print(joke)
     return
+
+
+def battle(args: Namespace) -> None:
+    ai_service = AIService(args.provider)
+    start_name = 'default' if args.provider == '-' else args.provider
+    models: [Model] = [{'name': start_name, 'service': ai_service, 'firstMessage': args.firstMessage}]
+
+    for model in args.models:
+        name = f'{args.models.index(model)}-{'default' if model == '-' else model}'
+        models.append({'name': name, 'service': AIService(model), 'firstMessage': ''})
+
+    battle = Battle(models)
+    battle.start_battle(args.numberOfBattles)
 
 
 def add_config(args: Namespace) -> None:

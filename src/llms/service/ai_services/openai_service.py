@@ -8,8 +8,8 @@ from .ai_abc import AIAbstractClass, OpenAIConfig
 class OpenAIService(AIAbstractClass):
     OPENAI: OpenAI
 
-    def __init__(self, config: OpenAIConfig):
-        super().__init__(config)
+    def __init__(self, config: OpenAIConfig, tone: str):
+        super().__init__(config, tone)
         if config['baseUrl'] and config['key']:
             self.OPENAI = OpenAI(base_url=config['baseUrl'], api_key=config['key'])
         elif config['baseUrl']:
@@ -19,7 +19,61 @@ class OpenAIService(AIAbstractClass):
         else:
             self.OPENAI = OpenAI()
 
-    def message_builder(self, tone: str, request: str) -> []:
+    def make_history_request(self, my_messages: [str], other_messages: [[str]], first: bool = False) -> str:
+        history_messages = [
+            {
+                "role": "system",
+                "content": self.tone
+            }
+        ]
+
+        if first:
+            for message in zip(*[my_messages, *other_messages]):
+                history_messages.append({
+                    "role": "assistant",
+                    "content": message[0]
+                })
+                for number in [i + 1 for i in range(len(message) - 1)]:
+                    history_messages.append({
+                        "role": "user",
+                        "content": message[number]
+                    })
+        else:
+            for message in zip(*[my_messages, *other_messages]):
+                for number in [i + 1 for i in range(len(message) - 1)]:
+                    history_messages.append({
+                        "role": "user",
+                        "content": message[number]
+                    })
+                history_messages.append({
+                    "role": "assistant",
+                    "content": message[0]
+                })
+            for other_message in other_messages:
+                if len(my_messages) < len(other_message):
+                    history_messages.append({
+                        "role": "user",
+                        "content": other_message[-1]
+                    })
+
+        method_args: dict = {
+            'model': self.config['model'],
+            'messages': history_messages,
+        }
+
+        if self.config['temperature']:
+            method_args.__setitem__('temperature', self.config['temperature'])
+
+        response = self.OPENAI.chat.completions.create(**method_args)
+
+        if not response.choices:
+            print("\nOpenAI Library request failed\n")
+            sys.exit(1)
+
+        for choice in response.choices:
+            yield choice.message.content or ''
+
+    def message_builder(self, tone: str = '', request: str = '') -> []:
         system_content = f"{self.tone}. {tone}" if tone else self.tone
         user_content = (request or self.config['request']) \
             if self.request_char_limit <= 0 \

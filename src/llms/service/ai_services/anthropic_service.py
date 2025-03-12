@@ -17,6 +17,48 @@ class AnthropicService(AIAbstractClass):
 
         return
 
+    def make_history_request(self, my_messages: [str], other_messages: [[str]], first: bool = False) -> str:
+        history_messages = []
+
+        if first:
+            for message in zip(*[my_messages, *other_messages]):
+                history_messages.append({
+                    "role": "assistant",
+                    "content": message[0]
+                })
+                for number in [i + 1 for i in range(len(message) - 1)]:
+                    history_messages.append({
+                        "role": "user",
+                        "content": message[number]
+                    })
+        else:
+            for message in zip(*[my_messages, *other_messages]):
+                for number in [i + 1 for i in range(len(message) - 1)]:
+                    history_messages.append({
+                        "role": "user",
+                        "content": message[number]
+                    })
+                history_messages.append({
+                    "role": "assistant",
+                    "content": message[0]
+                })
+            for other_message in other_messages:
+                if len(my_messages) < len(other_message):
+                    history_messages.append({
+                        "role": "user",
+                        "content": other_messages[-1]
+                    })
+
+        method_args: dict = {
+            'model': self.config['model'],
+            'max_tokens': self.config['maxTokens'],
+            'temperature': self.config['temperature'],
+            'system': self.tone,
+            'messages': history_messages,
+        }
+
+        yield from self.__simple_request(method_args)
+
     def message_builder(self, request: str) -> []:
         user_content = (request or self.config['request']) \
             if self.request_char_limit <= 0 \
@@ -59,7 +101,7 @@ class AnthropicService(AIAbstractClass):
             'model': self.config['model'],
             'max_tokens': self.config['maxTokens'],
             'temperature': self.config['temperature'],
-            'system': tone or self.tone,
+            'system': f"{self.tone}. {tone}" if tone else self.tone,
             'messages': messages,
         }
 

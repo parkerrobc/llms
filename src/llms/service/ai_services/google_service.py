@@ -13,6 +13,9 @@ class GoogleService(AIAbstractClass):
 
         return
 
+    def make_history_request(self, my_messages: [str], other_messages: [[str]], first: bool = False) -> str:
+        pass
+
     def make_request(self, tone: str, request: str, json: bool, stream: bool) -> str:
         user_message = (request or self.config['request']) \
             if self.request_char_limit <= 0 \
@@ -20,7 +23,7 @@ class GoogleService(AIAbstractClass):
 
         method_args: dict = {
             'model_name': self.config['model'],
-            'system_instruction': tone or self.tone
+            'system_instruction': f"{self.tone}. {tone}" if tone else self.tone
         }
 
         llm = google.generativeai.GenerativeModel(**method_args)
