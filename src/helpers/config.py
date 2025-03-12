@@ -35,7 +35,7 @@ def load_conf(conf_name: str = '') -> dict:
     file = __resource_path(f'{conf_name}.json')
 
     if not os.path.exists(file):
-        print(f'*** configuration {'for' + conf_name if conf_name else ''}'
+        print(f'*** configuration {'for' + conf_name if conf_name and conf_name != '-' else ''}'
               f'not found. loading default {DEFAULT_CONF_FILE} ***\n')
         file = __resource_path(DEFAULT_CONF_FILE)
 

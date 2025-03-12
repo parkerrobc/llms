@@ -11,7 +11,7 @@ providers: [str] = ['-'] + view_user_conf()
 def main() -> int:
     parser = argparse.ArgumentParser(prog='llms', usage='%(prog)s [options]')
 
-    parser.add_argument('provider', choices=providers, default='-', type=str, nargs="?",
+    parser.add_argument('-p', '--provider', choices=providers, default='-', type=str, nargs="?",
                         help=f"provider to use.")
     parser.add_argument("-t", "--tone", type=str, nargs='?',
                         help="tone that the llm should respond with")
