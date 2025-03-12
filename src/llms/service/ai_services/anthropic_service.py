@@ -46,7 +46,7 @@ class AnthropicService(AIAbstractClass):
                 if len(my_messages) < len(other_message):
                     history_messages.append({
                         "role": "user",
-                        "content": other_messages[-1]
+                        "content": other_message[-1]
                     })
 
         method_args: dict = {

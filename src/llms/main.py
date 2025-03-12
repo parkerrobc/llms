@@ -49,13 +49,13 @@ def make_joke(args: Namespace) -> None:
 
 def battle(args: Namespace) -> None:
     ai_service = AIService(args.provider)
-    start_name = 'default' if args.provider == '-' else args.provider
+    start_name = f'{'default' if args.provider == '-' else args.provider}-{str(uuid.uuid4())[3::4]}-{ai_service.get_name()}'
     models: [Model] = [{'name': start_name, 'service': ai_service, 'firstMessage': args.firstMessage}]
 
     for model in args.models:
-        my_uuid = uuid.uuid4()
-        name = f'{'default' if model == '-' else model}-{my_uuid}'
-        models.append({'name': name, 'service': AIService(model), 'firstMessage': ''})
+        model_service = AIService(model)
+        name = f'{'default' if model == '-' else model}-{str(uuid.uuid4())[3::4]}-{model_service.get_name()}'
+        models.append({'name': name, 'service': model_service, 'firstMessage': ''})
 
     battle = Battle(models)
     battle.start_battle(args.numberOfBattles)
