@@ -1,6 +1,6 @@
 ### LLMs
 
-This application works with AIs that follow the OpenAI API request/response paradigm. Simple application created for messing around with LLMs.
+This application works with AIs that follow the OpenAI API, Anthropic API, or Google request/response paradigms. Simple application created for messing around with LLMs.
 
 Built following the Udemy Course https://www.udemy.com/course/llm-engineering-master-ai-and-large-language-models along with custom touches and implementations. 
 
@@ -15,9 +15,11 @@ Project is set up to use Anaconda with an `environment.yml` file and PyInstaller
    conda env create --file environment.yml
    conda activate ai_llms
    ```
-2. Create `.env` file with your OpenAIApiKey and place it into the `src` directory (you can set this in the `app.properties` file if you wish not to create this)
+2. Create `.env` file with your OpenAIApiKey and place it into the `src` directory (you can set this in the `app.json` file if you wish not to create this or in a custom `<yourProvider>.json` file: see below)
    ```text
    OPEN_AI_KEY=<yourOpenAIApiKey>
+   ANTHROPIC_API_KEY=<yourAnthropicApiKey>
+   GOOGLE_API_KEY=<yourGoogleApiKey>
    ```
 3. Update `./src/app.json` with default configuration
    ```json
@@ -43,8 +45,6 @@ Project is set up to use Anaconda with an `environment.yml` file and PyInstaller
 usage: llms [options]
 
 positional arguments:
-  {-,anthropic,openai,google}
-                        provider to use.
   {createBrochure,simpleRequest,makeJoke,battle,addConfig,listConfig}
                         Available commands
     createBrochure      create brochure using ai
@@ -56,6 +56,8 @@ positional arguments:
 
 options:
   -h, --help            show this help message and exit
+  -p [{-,anthropic,openai,google-open,google}], --provider [{-,anthropic,openai,google-open,google}]
+                        provider to use.
   -t [TONE], --tone [TONE]
                         tone that the llm should respond with
 ```
@@ -98,12 +100,12 @@ llms addConfig -f yourProvider.json
 Python:
 ```bash
 cd ./src
-python llms.py yourProvider -t 'Respond as an arrogant, pious individual injecting your beliefs into any and all response details.' createBrochure https://linkedin.com
+python llms.py -p yourProvider -t 'Respond as an arrogant, pious individual injecting your beliefs into any and all response details.' createBrochure https://linkedin.com
 ```
 
 Installed on macOS:
 ```bash
-llms yourProvider -t 'Respond as an arrogant, pious individual injecting your beliefs into any and all response details.' createBrochure https://linkedin.com
+llms -p yourProvider -t 'Respond as an arrogant, pious individual injecting your beliefs into any and all response details.' createBrochure https://linkedin.com
 ```
 
 ### Feedback
