@@ -1,4 +1,5 @@
 import sys
+from typing import Generator, Union
 
 from openai import OpenAI
 
@@ -92,7 +93,9 @@ class OpenAIService(AIAbstractClass):
 
         return messages
 
-    def make_request(self, tone: str, request: str, json: bool, stream: bool) -> str:
+    def make_request(self, tone: str, request: str, json: bool, stream: bool) \
+            -> Union[Generator[str, None, None], str]:
+
         messages = self.message_builder(tone, request)
 
         method_args: dict = {
@@ -109,9 +112,14 @@ class OpenAIService(AIAbstractClass):
 
         response = self.OPENAI.chat.completions.create(**method_args)
 
-        if not response.choices:
-            print("\nOpenAI Library request failed\n")
-            sys.exit(1)
+        if not stream:
+            if not response.choices:
+                print("\nOpenAI Library request failed\n")
+                sys.exit(1)
+        else:
+            if not response:
+                print("\nOpenAI Library request failed\n")
+                sys.exit(1)
 
         if stream:
             for chunk in response:

@@ -5,7 +5,7 @@ from llms.core import BrochureMaker, WebScanner, Joker
 from llms.core.battle import Battle
 from llms.core.classes import Website, Model
 
-from llms.service import AIService, display_markdown
+from llms.service import AIService, display_markdown, create_gradio_display
 
 from helpers import load_env, add_update_conf, view_user_conf
 
@@ -23,7 +23,10 @@ def create_brochure(args: Namespace) -> None:
 
     scan_results = web_scanner.scan_website(website)
     brochure = brochure_maker.create_brochure(website.title, scan_results)
-    display_markdown(brochure)
+
+    for chunk in brochure:
+        display_markdown(chunk)
+
     return
 
 
@@ -59,6 +62,21 @@ def battle(args: Namespace) -> None:
 
     battle = Battle(models)
     battle.start_battle(args.numberOfBattles)
+
+
+def interactive(args: Namespace) -> None:
+    models = view_user_conf()
+
+    def call_model(request: str, model: str):
+        ai_service = AIService(model)
+        response = ai_service.make_request(tone=args.tone, request=request, stream=True)
+
+        result = ''
+        for chunk in response:
+            result += chunk
+            yield result
+    
+    create_gradio_display(call_model, models)
 
 
 def add_config(args: Namespace) -> None:

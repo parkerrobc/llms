@@ -13,6 +13,10 @@ class Website:
     A utility class to represent a Website that we have scraped, now with links.
     This class is enhanced from https://github.com/ed-donner/llm_engineering
     """
+    url: str
+    title: str
+    text: str
+    links: []
 
     def __init__(self, url: str):
         self.url = url

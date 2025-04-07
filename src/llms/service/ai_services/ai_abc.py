@@ -43,10 +43,12 @@ class AIAbstractClass(ABC):
         self.request_char_limit = config['requestCharLimit'] or 0
 
     @abstractmethod
-    def make_request(self, tone: str, request: str, json: bool, stream: bool) -> str: raise NotImplementedError
+    def make_request(self, tone: str, request: str, json: bool, stream: bool) -> str:
+        raise NotImplementedError
 
     @abstractmethod
-    def make_history_request(self, my_messages: [str], other_messages: [[str]], first: bool) -> str: raise NotImplementedError
+    def make_history_request(self, my_messages: [str], other_messages: [[str]], first: bool) -> str:
+        raise NotImplementedError
 
     def get_name(self) -> str:
         return f'{self.config['library']}-{self.config['model']}'

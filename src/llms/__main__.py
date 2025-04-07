@@ -1,7 +1,7 @@
 import argparse
 import sys
 
-from llms import create_brochure, simple_request, make_joke, battle, add_config, list_config
+from llms import create_brochure, simple_request, make_joke, battle, add_config, list_config, interactive
 
 from helpers import view_user_conf
 
@@ -43,6 +43,9 @@ def main() -> int:
 
     list_config_parser = subparsers.add_parser('listConfig', help='list llms configurations')
     list_config_parser.set_defaults(func=list_config)
+
+    interactive_parser = subparsers.add_parser('interactive', help='use gradio to create interactive UI')
+    interactive_parser.set_defaults(func=interactive)
 
     args = parser.parse_args()
 

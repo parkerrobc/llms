@@ -1,4 +1,5 @@
 import sys
+from typing import Generator, Union
 
 import anthropic
 
@@ -94,7 +95,9 @@ class AnthropicService(AIAbstractClass):
             for text in stream.text_stream:
                 yield text.replace("\n", " ").replace("\r", " ")
 
-    def make_request(self, tone: str, request: str, json: bool, stream: bool) -> str:
+    def make_request(self, tone: str, request: str, json: bool, stream: bool) \
+            -> Union[Generator[str, None, None], str]:
+
         messages = self.message_builder(request)
 
         method_args: dict = {

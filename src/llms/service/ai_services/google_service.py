@@ -1,3 +1,5 @@
+from typing import Generator, Union
+
 import google.generativeai
 
 from .ai_abc import AIAbstractClass, GoogleConfig
@@ -16,7 +18,9 @@ class GoogleService(AIAbstractClass):
     def make_history_request(self, my_messages: [str], other_messages: [[str]], first: bool = False) -> str:
         pass
 
-    def make_request(self, tone: str, request: str, json: bool, stream: bool) -> str:
+    def make_request(self, tone: str, request: str, json: bool, stream: bool) \
+            -> Union[Generator[str, None, None], str]:
+
         user_message = (request or self.config['request']) \
             if self.request_char_limit <= 0 \
             else (request or self.config['request'])[:self.request_char_limit]

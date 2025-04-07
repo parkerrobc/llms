@@ -1,3 +1,5 @@
+from typing import Generator, Union
+
 from helpers import load_conf
 
 from llms.service.ai_services import AIAbstractClass, OpenAIService, AnthropicService, GoogleService
@@ -18,7 +20,8 @@ class AIService:
         else:
             self.AI = OpenAIService(config, tone)
 
-    def make_request(self, tone: str, request: str, json: bool = False, stream: bool = False) -> str:
+    def make_request(self, tone: str, request: str, json: bool = False, stream: bool = False) \
+            -> Union[Generator[str, None, None], str]:
         return self.AI.make_request(tone, request, json, stream)
 
     def make_history_request(self, my_messages: [str], other_messages: [[str]], first: bool = False) -> str:

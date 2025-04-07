@@ -1,3 +1,5 @@
+from typing import Union, Generator
+
 from llms.service import AIService
 
 
@@ -30,16 +32,18 @@ class BrochureMaker:
         self.AI_SERVICE = ai_service
         self.TONE = f"{self.BROCHURE_TONE}  {tone}" if tone else self.BROCHURE_TONE
 
-    def create_brochure(self, title: str, details: str) -> str:
+    def create_brochure(self, title: str, details: str, stream: bool = False) \
+            -> Union[Generator[str, None, None]]:
         """
             creates an AI generated markdown brochure using self.BROCHURE_TONE and self.BROCHURE_REQUEST
 
             :param title: str -> for the title of the brochure
             :param details: str: -> unprocessed information about the brochure
+            :param stream: if you want to stream the response
 
             :return: str -> the brochure as a markdown string
         """
         brochure_request = self.BROCHURE_REQUEST.replace('{title}', title).replace('{details}', details)
-        brochure_response = self.AI_SERVICE.make_request(self.TONE, brochure_request)
+        brochure_response = self.AI_SERVICE.make_request(self.TONE, brochure_request, stream=stream)
 
-        return next(brochure_response).replace("```", "").replace("markdown", "")
+        yield from map(lambda x: x.replace("```", "").replace("markdown", ""), brochure_response)
