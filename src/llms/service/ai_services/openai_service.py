@@ -1,5 +1,6 @@
 import sys
 from typing import Generator, Union
+import json
 
 from openai import OpenAI
 
@@ -7,10 +8,11 @@ from .ai_abc import AIAbstractClass, OpenAIConfig
 
 
 class OpenAIService(AIAbstractClass):
-    OPENAI: OpenAI
-
     def __init__(self, config: OpenAIConfig, tone: str):
         super().__init__(config, tone)
+        self.MESSAGES: [] = []
+        self.OPENAI: OpenAI
+
         if config['baseUrl'] and config['key']:
             self.OPENAI = OpenAI(base_url=config['baseUrl'], api_key=config['key'])
         elif config['baseUrl']:
@@ -20,46 +22,33 @@ class OpenAIService(AIAbstractClass):
         else:
             self.OPENAI = OpenAI()
 
-    def make_history_request(self, my_messages: [str], other_messages: [[str]], first: bool = False) -> str:
-        history_messages = [
+    def update_messages(self, message: str = None, user_message: str = None, full_history: [] = None):
+        if full_history:
+            self.MESSAGES = full_history
+        if message:
+            self.MESSAGES.append({
+                    "role": "assistant",
+                    "content": message
+                })
+        if user_message:
+            self.MESSAGES.append({
+                "role": "user",
+                "content": user_message
+            })
+
+    def make_assistant_request(self) -> str:
+        messages = [
             {
                 "role": "system",
                 "content": self.tone
             }
         ]
 
-        if first:
-            for message in zip(*[my_messages, *other_messages]):
-                history_messages.append({
-                    "role": "assistant",
-                    "content": message[0]
-                })
-                for number in [i + 1 for i in range(len(message) - 1)]:
-                    history_messages.append({
-                        "role": "user",
-                        "content": message[number]
-                    })
-        else:
-            for message in zip(*[my_messages, *other_messages]):
-                for number in [i + 1 for i in range(len(message) - 1)]:
-                    history_messages.append({
-                        "role": "user",
-                        "content": message[number]
-                    })
-                history_messages.append({
-                    "role": "assistant",
-                    "content": message[0]
-                })
-            for other_message in other_messages:
-                if len(my_messages) < len(other_message):
-                    history_messages.append({
-                        "role": "user",
-                        "content": other_message[-1]
-                    })
+        messages = messages + self.MESSAGES
 
         method_args: dict = {
             'model': self.config['model'],
-            'messages': history_messages,
+            'messages': messages,
         }
 
         if self.config['temperature']:

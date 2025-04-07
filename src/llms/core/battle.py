@@ -4,34 +4,44 @@ from llms.core.classes import Model
 
 
 class Battle:
-    CHAT_HISTORY: OrderedDict = {}
-    MODELS: [Model] = None
-
     def __init__(self, models: [Model]) -> None:
-        self.MODELS = models
+        self.MODELS: OrderedDict = OrderedDict()
+
         print(f'\n***** LLM BATTLE *****\n')
         for model in models:
             name = model['name']
-            service = model['service']
-            first_message = model['firstMessage'] or 'Hello there!'
-            print(f'\n{name.upper()}:\n{first_message}\n')
-            self.CHAT_HISTORY.__setitem__(f'{name}-{service.get_name()}', model | {'messages': [first_message]})
+            self.MODELS.__setitem__(f'{name}', model)
 
     def start_battle(self, number_of_interactions: int) -> None:
         for interaction in range(number_of_interactions):
-            for index, (key, value) in enumerate(self.CHAT_HISTORY.items()):
+            for index, (key, value) in enumerate(self.MODELS.items()):
                 name = value['name']
-                messages = value['messages']
-                other_messages = [v['messages'] for k, v in self.CHAT_HISTORY.items() if k != key]
-                response = (value['service'].make_history_request
-                            (messages, other_messages, first=(True if index == 0 else False)))
+
+                if interaction == 0 and index == 0:
+                    message = value['message']
+                    print(f'\n{name.upper()}:\n{message}\n')
+                    value['service'].update_messages(message=message)
+                    continue
+
+                user_messages = [v['message'] if v['message'] else None
+                                 for i, (k, v) in
+                                 enumerate(self.MODELS.items()) if i != index and i > index]
+                user_messages = user_messages + [v['message'] if v['message'] else None
+                                                 for i, (k, v) in
+                                                 enumerate(self.MODELS.items()) if i != index and i < index]
+
+                for user_message in user_messages:
+                    if user_message:
+                        value['service'].update_messages(user_message=user_message)
+
+                response = value['service'].make_assistant_request()
 
                 new_message: str = ''
 
                 for info in response:
                     new_message += info
 
-                print(f'\n{name.upper()}:\n{new_message}')
-                messages.append(new_message)
+                print(f'\n{name.upper()}:\n{new_message}\n')
+                value['service'].update_messages(message=new_message)
 
-                self.CHAT_HISTORY.__setitem__(key, value | {'messages': messages})
+                self.MODELS.__setitem__(key, value | {'message': new_message})

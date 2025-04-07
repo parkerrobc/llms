@@ -6,9 +6,9 @@ from llms.service.ai_services import AIAbstractClass, OpenAIService, AnthropicSe
 
 
 class AIService:
-    AI: AIAbstractClass = None
-
     def __init__(self, provider: str, tone: str = '') -> None:
+        self.AI: AIAbstractClass
+
         config = load_conf(provider)
 
         library = config['library']
@@ -24,8 +24,11 @@ class AIService:
             -> Union[Generator[str, None, None], str]:
         return self.AI.make_request(tone, request, json, stream)
 
-    def make_history_request(self, my_messages: [str], other_messages: [[str]], first: bool = False) -> str:
-        return self.AI.make_history_request(my_messages, other_messages, first)
+    def update_messages(self, message: str = None, user_message: str = None, full_history: [] = None) -> None:
+        self.AI.update_messages(message, user_message, full_history)
+
+    def make_assistant_request(self) -> str:
+        return self.AI.make_assistant_request()
 
     def get_name(self) -> str:
         return self.AI.get_name()

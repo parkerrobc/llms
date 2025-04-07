@@ -7,10 +7,9 @@ from .ai_abc import AIAbstractClass, AnthropicConfig
 
 
 class AnthropicService(AIAbstractClass):
-    ANTHROPIC: anthropic.Anthropic
-
     def __init__(self, config: AnthropicConfig, tone: str):
         super().__init__(config, tone)
+        self.MESSAGES: [] = []
         if config['key']:
             self.ANTHROPIC = anthropic.Anthropic(api_key=config['key'])
         else:
@@ -18,44 +17,27 @@ class AnthropicService(AIAbstractClass):
 
         return
 
-    def make_history_request(self, my_messages: [str], other_messages: [[str]], first: bool = False) -> str:
-        history_messages = []
-
-        if first:
-            for message in zip(*[my_messages, *other_messages]):
-                history_messages.append({
+    def update_messages(self, message: str = '', user_message: str = '', full_history: [] = None):
+        if full_history:
+            self.MESSAGES = full_history
+        if message:
+            self.MESSAGES.append({
                     "role": "assistant",
-                    "content": message[0]
+                    "content": message
                 })
-                for number in [i + 1 for i in range(len(message) - 1)]:
-                    history_messages.append({
-                        "role": "user",
-                        "content": message[number]
-                    })
-        else:
-            for message in zip(*[my_messages, *other_messages]):
-                for number in [i + 1 for i in range(len(message) - 1)]:
-                    history_messages.append({
-                        "role": "user",
-                        "content": message[number]
-                    })
-                history_messages.append({
-                    "role": "assistant",
-                    "content": message[0]
-                })
-            for other_message in other_messages:
-                if len(my_messages) < len(other_message):
-                    history_messages.append({
-                        "role": "user",
-                        "content": other_message[-1]
-                    })
+        if user_message:
+            self.MESSAGES.append({
+                "role": "user",
+                "content": user_message
+            })
 
+    def make_assistant_request(self) -> str:
         method_args: dict = {
             'model': self.config['model'],
             'max_tokens': self.config['maxTokens'],
             'temperature': self.config['temperature'],
             'system': self.tone,
-            'messages': history_messages,
+            'messages': self.MESSAGES,
         }
 
         yield from self.__simple_request(method_args)

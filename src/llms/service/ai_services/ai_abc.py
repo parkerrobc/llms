@@ -47,7 +47,11 @@ class AIAbstractClass(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def make_history_request(self, my_messages: [str], other_messages: [[str]], first: bool) -> str:
+    def update_messages(self, message: str = None, user_message: str = None, full_history: [] = None) -> None:
+        raise NotImplementedError
+
+    @abstractmethod
+    def make_assistant_request(self) -> str:
         raise NotImplementedError
 
     def get_name(self) -> str:

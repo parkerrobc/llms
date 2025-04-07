@@ -8,6 +8,8 @@ from .ai_abc import AIAbstractClass, GoogleConfig
 class GoogleService(AIAbstractClass):
     def __init__(self, config: GoogleConfig, tone: str) -> None:
         super().__init__(config, tone)
+        self.MESSAGES: [] = []
+
         if config['key']:
             google.generativeai.configure(api_key=config['key'])
         else:
@@ -15,7 +17,12 @@ class GoogleService(AIAbstractClass):
 
         return
 
-    def make_history_request(self, my_messages: [str], other_messages: [[str]], first: bool = False) -> str:
+    def update_messages(self, message: str = '', user_message: str = '', full_history: [] = None) -> None:
+        """
+        TODO
+        """
+
+    def make_assistant_request(self) -> str:
         pass
 
     def make_request(self, tone: str, request: str, json: bool, stream: bool) \

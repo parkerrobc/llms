@@ -20,10 +20,6 @@ class BrochureMaker:
     {details}
     """
 
-    AI_SERVICE: AIService = None
-
-    TONE: str = ''
-
     def __init__(self, tone: str, ai_service: AIService) -> None:
         """
         :param tone: -> tone of the brochure

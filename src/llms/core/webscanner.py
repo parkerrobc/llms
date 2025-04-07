@@ -70,8 +70,6 @@ class WebScanner:
     {links}
     """
 
-    AI_SERVICE: AIService = None
-
     def __init__(self, ai_service: AIService):
         """
         :param ai_service: -> AI service that will scan the website content

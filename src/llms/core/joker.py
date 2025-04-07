@@ -13,11 +13,6 @@ class Joker:
     Tell a {joke_type} joke for an audience of {audience}.
     """
 
-    AIService: AIService = None
-
-    TONE: str = ''
-    REQUEST: str = ''
-
     def __init__(self, tone: str, joke_type: str, audience: str, ai_service: AIService) -> None:
         """
         :param tone: -> tone of the joke
