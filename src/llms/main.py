@@ -2,10 +2,13 @@ from argparse import Namespace
 import uuid
 
 from llms.core import BrochureMaker, WebScanner, Joker
-from llms.core.battle import Battle
+from llms.core.battle_sim import BattleSim
 from llms.core.classes import Website, Model
 
-from llms.service import AIService, display_markdown, create_gradio_display
+from llms.service import (AIService,
+                          display_markdown,
+                          create_request_display,
+                          create_model_selection_display, create_chat_display)
 
 from helpers import load_env, add_update_conf, view_user_conf
 
@@ -50,7 +53,7 @@ def make_joke(args: Namespace) -> None:
     return
 
 
-def battle(args: Namespace) -> None:
+def battle_sim(args: Namespace) -> None:
     ai_service = AIService(args.provider)
     start_name = f'{'default' if args.provider == '-' else args.provider}-{str(uuid.uuid4())[3::4]}-{ai_service.get_name()}'
     models: [Model] = [{'name': start_name, 'service': ai_service, 'message': args.firstMessage}]
@@ -60,8 +63,8 @@ def battle(args: Namespace) -> None:
         name = f'{'default' if model == '-' else model}-{str(uuid.uuid4())[3::4]}-{model_service.get_name()}'
         models.append({'name': name, 'service': model_service, 'message': ''})
 
-    battle = Battle(models)
-    battle.start_battle(args.numberOfBattles)
+    battle = BattleSim(models)
+    battle.start(args.numberOfBattles)
 
 
 def interactive(args: Namespace) -> None:
@@ -76,15 +79,24 @@ def interactive(args: Namespace) -> None:
             result += chunk
             yield result
 
-    create_gradio_display(call_model, models)
+    create_request_display(call_model, models)
 
 
 def chat_bot(args: Namespace) -> None:
+    models = view_user_conf()
     ai_service = AIService(args.provider)
-    my_messages: [str] = []
 
-    def chat(message: str, history):
-        my_messages.append(message)
+    def chat(message, history):
+        ai_service.update_messages(full_history=history)
+        ai_service.update_messages(user_message=message)
+        response = ai_service.make_assistant_request()
+        result = ''
+
+        for chunk in response:
+            result += chunk
+            yield result
+
+    create_chat_display(chat)
 
 
 def add_config(args: Namespace) -> None:

@@ -3,7 +3,7 @@ from collections import OrderedDict
 from llms.core.classes import Model
 
 
-class Battle:
+class BattleSim:
     def __init__(self, models: [Model]) -> None:
         self.MODELS: OrderedDict = OrderedDict()
 
@@ -12,7 +12,7 @@ class Battle:
             name = model['name']
             self.MODELS.__setitem__(f'{name}', model)
 
-    def start_battle(self, number_of_interactions: int) -> None:
+    def start(self, number_of_interactions: int) -> None:
         for interaction in range(number_of_interactions):
             for index, (key, value) in enumerate(self.MODELS.items()):
                 name = value['name']
