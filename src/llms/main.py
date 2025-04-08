@@ -83,7 +83,6 @@ def interactive(args: Namespace) -> None:
 
 
 def chat_bot(args: Namespace) -> None:
-    models = view_user_conf()
     ai_service = AIService(args.provider)
 
     def chat(message, history):
