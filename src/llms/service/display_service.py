@@ -37,7 +37,6 @@ def create_model_selection_display(function: Callable, models: [str]) -> None:
 
 
 def create_chat_display(function: Callable) -> None:
-    function('hello', [])
     view = gr.ChatInterface(
         fn=function,
         type="messages",
