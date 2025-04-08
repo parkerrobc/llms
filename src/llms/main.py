@@ -86,8 +86,7 @@ def chat_bot(args: Namespace) -> None:
     ai_service = AIService(args.provider)
 
     def chat(message, history):
-        ai_service.update_messages(full_history=history)
-        ai_service.update_messages(user_message=message)
+        ai_service.update_messages(user_message=message, full_history=history)
         response = ai_service.make_assistant_request()
         result = ''
 
