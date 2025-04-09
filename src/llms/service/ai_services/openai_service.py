@@ -22,6 +22,30 @@ class OpenAIService(AIAbstractClass):
         else:
             self.OPENAI = OpenAI()
 
+    def call_openai_api(self, method_args: dict, stream: bool) \
+            -> Union[Generator[str, None, None], str]:
+        if stream:
+            method_args.__setitem__('stream', True)
+
+        response = self.OPENAI.chat.completions.create(**method_args)
+
+        if not stream:
+            if not response.choices:
+                print("\nOpenAI Library request failed\n")
+                sys.exit(1)
+        else:
+            if not response:
+                print("\nOpenAI Library request failed\n")
+                sys.exit(1)
+
+        if stream:
+            for chunk in response:
+                for choice in chunk.choices:
+                    yield choice.delta.content or ''
+        else:
+            for choice in response.choices:
+                yield choice.message.content or ''
+
     def update_messages(self, message: str = None, user_message: str = None, full_history: [] = None):
         if full_history:
             self.MESSAGES = full_history
@@ -36,7 +60,7 @@ class OpenAIService(AIAbstractClass):
                 "content": user_message
             })
 
-    def make_assistant_request(self) -> str:
+    def make_assistant_request(self, stream: bool) -> str:
         messages = [
             {
                 "role": "system",
@@ -54,14 +78,7 @@ class OpenAIService(AIAbstractClass):
         if self.config['temperature']:
             method_args.__setitem__('temperature', self.config['temperature'])
 
-        response = self.OPENAI.chat.completions.create(**method_args)
-
-        if not response.choices:
-            print("\nOpenAI Library request failed\n")
-            sys.exit(1)
-
-        for choice in response.choices:
-            yield choice.message.content or ''
+        yield from self.call_openai_api(method_args, stream)
 
     def message_builder(self, tone: str = '', request: str = '') -> []:
         system_content = f"{self.tone}. {tone}" if tone else self.tone
@@ -94,26 +111,7 @@ class OpenAIService(AIAbstractClass):
 
         if json:
             method_args.__setitem__('response_format', {"type": "json_object"})
-        if stream:
-            method_args.__setitem__('stream', True)
         if self.config['temperature']:
             method_args.__setitem__('temperature', self.config['temperature'])
 
-        response = self.OPENAI.chat.completions.create(**method_args)
-
-        if not stream:
-            if not response.choices:
-                print("\nOpenAI Library request failed\n")
-                sys.exit(1)
-        else:
-            if not response:
-                print("\nOpenAI Library request failed\n")
-                sys.exit(1)
-
-        if stream:
-            for chunk in response:
-                for choice in chunk.choices:
-                    yield choice.delta.content or ''
-        else:
-            for choice in response.choices:
-                yield choice.message.content or ''
+        yield from self.call_openai_api(method_args, stream)

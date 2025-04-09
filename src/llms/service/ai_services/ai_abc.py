@@ -51,7 +51,7 @@ class AIAbstractClass(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def make_assistant_request(self) -> str:
+    def make_assistant_request(self, stream: bool) -> str:
         raise NotImplementedError
 
     def get_name(self) -> str:

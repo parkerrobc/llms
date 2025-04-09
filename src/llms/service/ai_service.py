@@ -27,8 +27,8 @@ class AIService:
     def update_messages(self, message: str = None, user_message: str = None, full_history: [] = None) -> None:
         self.AI.update_messages(message, user_message, full_history)
 
-    def make_assistant_request(self) -> str:
-        return self.AI.make_assistant_request()
+    def make_assistant_request(self, stream: bool = False) -> str:
+        return self.AI.make_assistant_request(stream)
 
     def get_name(self) -> str:
         return self.AI.get_name()

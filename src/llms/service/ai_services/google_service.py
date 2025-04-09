@@ -22,7 +22,7 @@ class GoogleService(AIAbstractClass):
         TODO
         """
 
-    def make_assistant_request(self) -> str:
+    def make_assistant_request(self, stream: bool) -> str:
         pass
 
     def make_request(self, tone: str, request: str, json: bool, stream: bool) \

@@ -31,7 +31,7 @@ class AnthropicService(AIAbstractClass):
                 "content": user_message
             })
 
-    def make_assistant_request(self) -> str:
+    def make_assistant_request(self, stream: bool) -> str:
         method_args: dict = {
             'model': self.config['model'],
             'max_tokens': self.config['maxTokens'],
@@ -40,7 +40,10 @@ class AnthropicService(AIAbstractClass):
             'messages': self.MESSAGES,
         }
 
-        yield from self.__simple_request(method_args)
+        if stream:
+            yield from self.__stream_request(method_args)
+        else:
+            yield from self.__simple_request(method_args)
 
     def message_builder(self, request: str) -> []:
         user_content = (request or self.config['request']) \
