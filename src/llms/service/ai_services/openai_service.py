@@ -1,6 +1,5 @@
 import sys
 from typing import Generator, Union
-import json
 
 from openai import OpenAI
 
