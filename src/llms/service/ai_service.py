@@ -11,24 +11,27 @@ class AIService:
 
         config = load_conf(provider)
 
+        if tone:
+            config['tone'] = tone
+
         library = config['library']
 
         if library == 'anthropic':
-            self.AI = AnthropicService(config, tone)
+            self.AI = AnthropicService(config)
         elif library == 'google':
-            self.AI = GoogleService(config, tone)
+            self.AI = GoogleService(config)
         else:
-            self.AI = OpenAIService(config, tone)
+            self.AI = OpenAIService(config)
 
-    def make_request(self, tone: str, request: str, json: bool = False, stream: bool = False) \
+    def make_request(self, tone: str, request: str, json: bool = False, stream: bool = False, use_tools: bool = False) \
             -> Union[Generator[str, None, None], str]:
-        return self.AI.make_request(tone, request, json, stream)
+        return self.AI.make_request(tone, request, json, stream, use_tools)
 
     def update_messages(self, message: str = None, user_message: str = None, full_history: [] = None) -> None:
         self.AI.update_messages(message, user_message, full_history)
 
-    def make_assistant_request(self, stream: bool = False) -> str:
-        return self.AI.make_assistant_request(stream)
+    def make_assistant_request(self, stream: bool = False, use_tools: bool = False) -> str:
+        return self.AI.make_assistant_request(stream, use_tools)
 
     def get_name(self) -> str:
         return self.AI.get_name()

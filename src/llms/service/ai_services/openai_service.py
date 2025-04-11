@@ -7,8 +7,8 @@ from .ai_abc import AIAbstractClass, OpenAIConfig
 
 
 class OpenAIService(AIAbstractClass):
-    def __init__(self, config: OpenAIConfig, tone: str):
-        super().__init__(config, tone)
+    def __init__(self, config: OpenAIConfig):
+        super().__init__(config)
         self.MESSAGES: [] = []
         self.OPENAI: OpenAI
 
@@ -21,10 +21,12 @@ class OpenAIService(AIAbstractClass):
         else:
             self.OPENAI = OpenAI()
 
-    def call_openai_api(self, method_args: dict, stream: bool) \
+    def call_openai_api(self, method_args: dict, stream: bool, use_tools: bool) \
             -> Union[Generator[str, None, None], str]:
         if stream:
             method_args.__setitem__('stream', True)
+        if use_tools:
+            method_args.__setitem__('tools', self.tools)
 
         response = self.OPENAI.chat.completions.create(**method_args)
 
@@ -37,10 +39,42 @@ class OpenAIService(AIAbstractClass):
                 print("\nOpenAI Library request failed\n")
                 sys.exit(1)
 
+        tool_call = None
+
         if stream:
             for chunk in response:
+                if not chunk:
+                    continue
                 for choice in chunk.choices:
-                    yield choice.delta.content or ''
+                    if choice.delta.tool_calls:
+                        for tool_chunk in choice.delta.tool_calls:
+                            if tool_chunk.index is not None:
+                                if tool_call:
+                                    yield self.handle_tool_request(tool_call['function'].name,
+                                                                   **tool_call['function'].arguments)
+                                tool_call = {
+                                    'index': tool_chunk.index
+                                }
+                            else:
+                                tool_call = None
+
+                            if tool_chunk.id:
+                                tool_call["id"] = tool_chunk.id
+
+                            if tool_chunk.type:
+                                tool_call["type"] = tool_chunk.type
+
+                            if tool_chunk.function:
+                                if tool_chunk.function.name:
+                                    tool_call["function"] = tool_chunk.get("function", {})
+                                    tool_call["function"]["name"] = tool_chunk.function.name
+                                if tool_chunk.function.arguments is not None:
+                                    tool_call["function"] = tool_call.get("function", {})
+                                    tool_call["function"]["arguments"] = (
+                                                tool_call["function"].get("arguments")
+                                                + tool_chunk.function.arguments)
+                    else:
+                        yield choice.delta.content or ''
         else:
             for choice in response.choices:
                 yield choice.message.content or ''
@@ -59,7 +93,7 @@ class OpenAIService(AIAbstractClass):
                 "content": user_message
             })
 
-    def make_assistant_request(self, stream: bool) -> str:
+    def make_assistant_request(self, stream: bool, use_tools: bool) -> str:
         messages = [
             {
                 "role": "system",
@@ -77,7 +111,7 @@ class OpenAIService(AIAbstractClass):
         if self.config['temperature']:
             method_args.__setitem__('temperature', self.config['temperature'])
 
-        yield from self.call_openai_api(method_args, stream)
+        yield from self.call_openai_api(method_args, stream, use_tools)
 
     def message_builder(self, tone: str = '', request: str = '') -> []:
         system_content = f"{self.tone}. {tone}" if tone else self.tone
@@ -98,7 +132,7 @@ class OpenAIService(AIAbstractClass):
 
         return messages
 
-    def make_request(self, tone: str, request: str, json: bool, stream: bool) \
+    def make_request(self, tone: str, request: str, json: bool, stream: bool, use_tools: bool) \
             -> Union[Generator[str, None, None], str]:
 
         messages = self.message_builder(tone, request)
@@ -113,4 +147,4 @@ class OpenAIService(AIAbstractClass):
         if self.config['temperature']:
             method_args.__setitem__('temperature', self.config['temperature'])
 
-        yield from self.call_openai_api(method_args, stream)
+        yield from self.call_openai_api(method_args, stream, use_tools)

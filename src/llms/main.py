@@ -8,7 +8,7 @@ from llms.core.classes import Website, Model
 from llms.service import (AIService,
                           display_markdown,
                           create_request_display,
-                          create_model_selection_display, create_chat_display)
+                          create_chat_display)
 
 from helpers import load_env, add_update_conf, view_user_conf
 
@@ -87,7 +87,7 @@ def chat_bot(args: Namespace) -> None:
 
     def chat(message, history):
         ai_service.update_messages(user_message=message, full_history=history)
-        response = ai_service.make_assistant_request(stream=True)
+        response = ai_service.make_assistant_request(stream=True, use_tools=True)
         result = ''
 
         for chunk in response:

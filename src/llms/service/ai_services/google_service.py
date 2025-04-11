@@ -6,8 +6,8 @@ from .ai_abc import AIAbstractClass, GoogleConfig
 
 
 class GoogleService(AIAbstractClass):
-    def __init__(self, config: GoogleConfig, tone: str) -> None:
-        super().__init__(config, tone)
+    def __init__(self, config: GoogleConfig) -> None:
+        super().__init__(config)
         self.MESSAGES: [] = []
 
         if config['key']:
@@ -22,10 +22,10 @@ class GoogleService(AIAbstractClass):
         TODO
         """
 
-    def make_assistant_request(self, stream: bool) -> str:
+    def make_assistant_request(self, stream: bool, use_tools: bool) -> str:
         pass
 
-    def make_request(self, tone: str, request: str, json: bool, stream: bool) \
+    def make_request(self, tone: str, request: str, json: bool, stream: bool, use_tools: bool) \
             -> Union[Generator[str, None, None], str]:
 
         user_message = (request or self.config['request']) \
