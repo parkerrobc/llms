@@ -1,3 +1,4 @@
+from json import dumps
 import sys
 from typing import Generator, Union
 
@@ -5,7 +6,10 @@ from openai import OpenAI
 
 from .ai_abc import AIAbstractClass, OpenAIConfig
 
+from helpers import inject
 
+
+@inject(tool_box='tool_box')
 class OpenAIService(AIAbstractClass):
     def __init__(self, config: OpenAIConfig):
         super().__init__(config)
@@ -26,7 +30,7 @@ class OpenAIService(AIAbstractClass):
         if stream:
             method_args.__setitem__('stream', True)
         if use_tools:
-            method_args.__setitem__('tools', self.tools)
+            method_args.__setitem__('tools', self.tool_box.tools)
 
         response = self.OPENAI.chat.completions.create(**method_args)
 
@@ -39,45 +43,44 @@ class OpenAIService(AIAbstractClass):
                 print("\nOpenAI Library request failed\n")
                 sys.exit(1)
 
-        tool_call = None
-
         if stream:
             for chunk in response:
                 if not chunk:
                     continue
                 for choice in chunk.choices:
-                    if choice.delta.tool_calls:
-                        for tool_chunk in choice.delta.tool_calls:
-                            if tool_chunk.index is not None:
-                                if tool_call:
-                                    yield self.handle_tool_request(tool_call['function'].name,
-                                                                   **tool_call['function'].arguments)
-                                tool_call = {
-                                    'index': tool_chunk.index
-                                }
-                            else:
-                                tool_call = None
-
-                            if tool_chunk.id:
-                                tool_call["id"] = tool_chunk.id
-
-                            if tool_chunk.type:
-                                tool_call["type"] = tool_chunk.type
-
-                            if tool_chunk.function:
-                                if tool_chunk.function.name:
-                                    tool_call["function"] = tool_chunk.get("function", {})
-                                    tool_call["function"]["name"] = tool_chunk.function.name
-                                if tool_chunk.function.arguments is not None:
-                                    tool_call["function"] = tool_call.get("function", {})
-                                    tool_call["function"]["arguments"] = (
-                                                tool_call["function"].get("arguments")
-                                                + tool_chunk.function.arguments)
-                    else:
-                        yield choice.delta.content or ''
+                    yield choice.delta.content or ''
         else:
             for choice in response.choices:
-                yield choice.message.content or ''
+                if use_tools:
+                    if choice.finish_reason == 'tool_calls':
+                        message = choice.message
+
+                        messages = method_args['messages']
+                        tool_calls = message.tool_calls
+
+                        if tool_calls:
+                            messages.append(message)
+                            for tool_call in tool_calls:
+                                name = tool_call.function.name
+                                arguments = tool_call.function.arguments
+                                tool_result = self.tool_box.handle_tool_call(tool_call.id, name, arguments)
+                                messages.append(tool_result)
+
+                                method_args.__setitem__('messages', messages)
+                                method_args.__delitem__('tools')
+
+                                print(f'messages: {messages}')
+
+                                second_response = self.call_openai_api(method_args, False, False)
+
+                                for chunk in second_response:
+                                    print(f'chunk: {chunk}')
+                                    yield chunk
+
+                        print(f'choice: {choice.message.content}')
+                        yield choice.message.content or ''
+                else:
+                    yield choice.message.content or ''
 
     def update_messages(self, message: str = None, user_message: str = None, full_history: [] = None):
         if full_history:

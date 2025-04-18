@@ -1,8 +1,9 @@
 from abc import abstractmethod, ABC
-from typing import TypedDict, NotRequired, Required, Callable
+from typing import TypedDict, NotRequired, Required
 
 
 class BaseConfig(TypedDict):
+    name: Required[str]
     tone: Required[str]
     request: Required[str]
     model: Required[str]
@@ -37,7 +38,7 @@ class AIAbstractClass(ABC):
     @abstractmethod
     def __init__(self, config: AnthropicConfig | OpenAIConfig | GoogleConfig) -> None:
         self.config: AnthropicConfig | OpenAIConfig | GoogleConfig = config
-        self.tone = config['tone']
+        self.tone = f'model={config['name']} {config['tone']}'
         self.request_char_limit = config['requestCharLimit'] or 0
 
     @abstractmethod

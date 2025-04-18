@@ -1,29 +1,25 @@
-from llms.service import AIService
+from helpers import inject
 
 
+@inject(ai_service='ai_service')
 class Joker:
     """
-        wanna hear a joke? ask this mo-fo
+    wanna hear a joke? ask this mo-fo
     """
 
-    JOKE_TONE = """
+    TONE = """
     You are an assistant that is great at telling jokes.
     """
-    JOKE_REQUEST = """
+    REQUEST = """
     Tell a {joke_type} joke for an audience of {audience}.
     """
 
-    def __init__(self, tone: str, joke_type: str, audience: str, ai_service: AIService) -> None:
-        """
-        :param tone: -> tone of the joke
-        :param ai_service: -> AI service that will make the joke
-        """
-        self.AI_SERVICE = ai_service
-        self.TONE = f"{self.JOKE_TONE} {tone}" if tone else self.JOKE_TONE
-        self.REQUEST = self.JOKE_REQUEST.replace('{joke_type}', joke_type).replace('{audience}', audience)
-
-    def tell_joke(self) -> str:
+    def tell_joke(self, model: str, tone: str, joke_type: str, audience: str) -> str:
         """
         :return: -> str the joke
         """
-        return next(self.AI_SERVICE.make_request(self.TONE, self.REQUEST))
+        ai_facade = self.ai_service.get(model)
+        tone = f"{self.TONE} {tone}" if tone else self.TONE
+        request = self.REQUEST.replace('{joke_type}', joke_type).replace('{audience}', audience)
+
+        return next(ai_facade.make_request(tone, request))
