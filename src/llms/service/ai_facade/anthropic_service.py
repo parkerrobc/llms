@@ -7,8 +7,8 @@ from .ai_abc import AIAbstractClass, AnthropicConfig
 
 
 class AnthropicService(AIAbstractClass):
-    def __init__(self, config: AnthropicConfig, tone: str):
-        super().__init__(config, tone)
+    def __init__(self, config: AnthropicConfig):
+        super().__init__(config)
         self.MESSAGES: [] = []
         if config['key']:
             self.ANTHROPIC = anthropic.Anthropic(api_key=config['key'])
@@ -31,7 +31,7 @@ class AnthropicService(AIAbstractClass):
                 "content": user_message
             })
 
-    def make_assistant_request(self, stream: bool) -> str:
+    def make_assistant_request(self, stream: bool, use_tools: bool) -> str:
         method_args: dict = {
             'model': self.config['model'],
             'max_tokens': self.config['maxTokens'],
@@ -80,7 +80,7 @@ class AnthropicService(AIAbstractClass):
             for text in stream.text_stream:
                 yield text.replace("\n", " ").replace("\r", " ")
 
-    def make_request(self, tone: str, request: str, json: bool, stream: bool) \
+    def make_request(self, tone: str, request: str, json: bool, stream: bool, use_tools: bool) \
             -> Union[Generator[str, None, None], str]:
 
         messages = self.message_builder(request)

@@ -1,8 +1,7 @@
 import json
 
+from helpers import inject
 from llms.core.classes import Website
-
-from llms.service import AIService
 
 
 def process_links(links: json) -> str:
@@ -42,12 +41,13 @@ def process_links(links: json) -> str:
     return link_content
 
 
+@inject(ai_service='ai_service')
 class WebScanner:
     """
         This class uses AI to scan website data
     """
 
-    SCAN_TONE = """
+    TONE = """
     You are provided with a list of links found on a webpage.
     You are able to decide which of the links would be most relevant to include in a brochure about the company, 
     such as links to an About page, or a Company page, or Careers/Jobs pages.
@@ -62,7 +62,7 @@ class WebScanner:
     "type" and "url" must be Strings, not an object or array.
     "url" must be a valid https url.
     """
-    SCAN_REQUEST = """
+    REQUEST = """
     Here is the list of links on the website of {url} - please decide which of these are relevant
     web links for a brochure about the company, respond with the full https URL in JSON format.
     Do not include Terms of Service, Privacy, email links.
@@ -70,25 +70,22 @@ class WebScanner:
     {links}
     """
 
-    def __init__(self, ai_service: AIService):
-        """
-        :param ai_service: -> AI service that will scan the website content
-        """
-        self.AI_SERVICE = ai_service
-
-    def scan_website(self, website: Website) -> str:
+    def scan_website(self, model: str, website: Website) -> str:
         """
         scans a given website using AI and returns details on each important link as a string
 
+        :param model:
         :param website:
 
         :return: -> str containing details about the website
         """
-        scan_request = (self.SCAN_REQUEST
+        ai_facade = self.ai_service.get(model)
+
+        scan_request = (self.REQUEST
                         .replace('{url}', website.title)
                         .replace('{links}', ", ".join(website.links)))
 
-        scan_results = self.AI_SERVICE.make_request(self.SCAN_TONE, scan_request, True)
+        scan_results = ai_facade.make_request(self.TONE, scan_request, True)
 
         try:
             links = json.loads(next(scan_results))

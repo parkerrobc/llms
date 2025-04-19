@@ -1,34 +1,31 @@
-from typing import Generator, Union
+from collections import OrderedDict
 
-from helpers import load_conf
-
-from llms.service.ai_services import AIAbstractClass, OpenAIService, AnthropicService, GoogleService
+from .ai_facade import AIFacade
 
 
-class AIService:
-    def __init__(self, provider: str, tone: str = '') -> None:
-        self.AI: AIAbstractClass
+class AIService(OrderedDict):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
-        config = load_conf(provider)
-
-        library = config['library']
-
-        if library == 'anthropic':
-            self.AI = AnthropicService(config, tone)
-        elif library == 'google':
-            self.AI = GoogleService(config, tone)
+    def __instantiate_ai(self, model: str, tone: str, key: str) -> None:
+        print(f'*** instantiating {model}{' with' + key if key else ''} ***')
+        ai_facade = AIFacade(model, tone)
+        if key:
+            self.__setitem__(key, ai_facade)
         else:
-            self.AI = OpenAIService(config, tone)
+            self.__setitem__(model, ai_facade)
 
-    def make_request(self, tone: str, request: str, json: bool = False, stream: bool = False) \
-            -> Union[Generator[str, None, None], str]:
-        return self.AI.make_request(tone, request, json, stream)
+    def get(self, model: str, tone: str = '', key: str = '') -> AIFacade:
+        if key and key not in self.keys():
+            self.__instantiate_ai(model, tone, key)
+        elif not key and model not in self.keys():
+            self.__instantiate_ai(model, tone, key)
 
-    def update_messages(self, message: str = None, user_message: str = None, full_history: [] = None) -> None:
-        self.AI.update_messages(message, user_message, full_history)
+        ai_facade: AIFacade
 
-    def make_assistant_request(self, stream: bool = False) -> str:
-        return self.AI.make_assistant_request(stream)
+        if key:
+            ai_facade = self.__getitem__(key)
+        else:
+            ai_facade = self.__getitem__(model)
 
-    def get_name(self) -> str:
-        return self.AI.get_name()
+        return ai_facade

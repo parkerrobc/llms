@@ -3,6 +3,7 @@ from typing import TypedDict, NotRequired, Required
 
 
 class BaseConfig(TypedDict):
+    name: Required[str]
     tone: Required[str]
     request: Required[str]
     model: Required[str]
@@ -34,16 +35,14 @@ class GoogleConfig(BaseConfig, TypedDict):
 
 
 class AIAbstractClass(ABC):
-    config: AnthropicConfig | OpenAIConfig = None
-
     @abstractmethod
-    def __init__(self, config: AnthropicConfig | OpenAIConfig | GoogleConfig, tone: str = '') -> None:
-        self.config = config
-        self.tone = tone or config['tone']
+    def __init__(self, config: AnthropicConfig | OpenAIConfig | GoogleConfig) -> None:
+        self.config: AnthropicConfig | OpenAIConfig | GoogleConfig = config
+        self.tone = f'model={config['name']} {config['tone']}'
         self.request_char_limit = config['requestCharLimit'] or 0
 
     @abstractmethod
-    def make_request(self, tone: str, request: str, json: bool, stream: bool) -> str:
+    def make_request(self, tone: str, request: str, json: bool, stream: bool, use_tools: bool) -> str:
         raise NotImplementedError
 
     @abstractmethod
@@ -51,7 +50,7 @@ class AIAbstractClass(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def make_assistant_request(self, stream: bool) -> str:
+    def make_assistant_request(self, stream: bool, use_tools: bool) -> str:
         raise NotImplementedError
 
     def get_name(self) -> str:

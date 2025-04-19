@@ -1,67 +1,64 @@
 from argparse import Namespace
 import uuid
 
-from llms.core import BrochureMaker, WebScanner, Joker
+from llms.core import ToolBox
 from llms.core.battle_sim import BattleSim
-from llms.core.classes import Website, Model
+from llms.core.classes import Model
 
 from llms.service import (AIService,
                           display_markdown,
                           create_request_display,
-                          create_model_selection_display, create_chat_display)
+                          create_chat_display)
 
-from helpers import load_env, add_update_conf, view_user_conf
+from helpers import ConfigLoader, add_update_conf, view_user_conf, container
 
 """
-load environment variables
+instantiate dependencies
 """
-load_env()
+config_loader = ConfigLoader()
+container.register('config_loader', config_loader)
+
+ai_service = AIService()
+container.register('ai_service', ai_service)
+
+tool_box = ToolBox()
+container.register('tool_box', tool_box)
 
 
 def create_brochure(args: Namespace) -> None:
-    ai_service = AIService(args.provider)
-    web_scanner = WebScanner(ai_service)
-    brochure_maker = BrochureMaker(args.tone, ai_service)
-    website = Website(args.url)
+    brochure = tool_box.create_brochure(args.provider, args.url, args.tone)
 
-    scan_results = web_scanner.scan_website(website)
-    brochure = brochure_maker.create_brochure(website.title, scan_results)
-
-    for chunk in brochure:
-        display_markdown(chunk)
+    display_markdown(brochure.replace("```", ""))
 
     return
 
 
 def simple_request(args: Namespace) -> None:
-    ai_service = AIService(args.provider)
-    response = ai_service.make_request(args.tone, args.request)
+    response = tool_box.simple_request(args.tone, args.request)
 
-    for value in response:
-        print(f'{value}\n')
+    print(response)
 
     return
 
 
 def make_joke(args: Namespace) -> None:
-    ai_service = AIService(args.provider)
-    joker = Joker(args.tone, args.jokeType, args.audience, ai_service)
-
-    joke = joker.tell_joke()
+    joke = tool_box.tell_joke(args.provider, args.tone, args.jokeType, args.audience)
 
     print(joke)
+
     return
 
 
 def battle_sim(args: Namespace) -> None:
-    ai_service = AIService(args.provider)
-    start_name = f'{'default' if args.provider == '-' else args.provider}-{str(uuid.uuid4())[3::4]}-{ai_service.get_name()}'
-    models: [Model] = [{'name': start_name, 'service': ai_service, 'message': args.firstMessage}]
+    start_name = f'{'default' if args.provider == '-' else args.provider}-{str(uuid.uuid4())[3::4]}'
+    ai_facade = ai_service.get(model=args.provider, key=start_name)
+    models: [Model] = [
+        {'name': f'{start_name}-{ai_facade.get_name()}', 'service': ai_facade, 'message': args.firstMessage}]
 
     for model in args.models:
-        model_service = AIService(model)
-        name = f'{'default' if model == '-' else model}-{str(uuid.uuid4())[3::4]}-{model_service.get_name()}'
-        models.append({'name': name, 'service': model_service, 'message': ''})
+        name = f'{'default' if model == '-' else model}-{str(uuid.uuid4())[3::4]}'
+        model_service = ai_service.get(model=model, key=name)
+        models.append({'name': f'{name}-{model_service.get_name()}', 'service': model_service, 'message': ''})
 
     battle = BattleSim(models)
     battle.start(args.numberOfBattles)
@@ -71,8 +68,7 @@ def interactive(args: Namespace) -> None:
     models = view_user_conf()
 
     def call_model(request: str, model: str):
-        ai_service = AIService(model)
-        response = ai_service.make_request(tone=args.tone, request=request, stream=True)
+        response = ai_service.get(model).make_request(tone=args.tone, request=request, stream=True)
 
         result = ''
         for chunk in response:
@@ -83,11 +79,11 @@ def interactive(args: Namespace) -> None:
 
 
 def chat_bot(args: Namespace) -> None:
-    ai_service = AIService(args.provider)
+    ai_facade = ai_service.get(model=args.provider)
 
     def chat(message, history):
-        ai_service.update_messages(user_message=message, full_history=history)
-        response = ai_service.make_assistant_request(stream=True)
+        ai_facade.update_messages(user_message=message, full_history=history)
+        response = ai_facade.make_assistant_request(stream=False, use_tools=True)
         result = ''
 
         for chunk in response:

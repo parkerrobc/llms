@@ -2,6 +2,7 @@ import json
 import shutil
 import sys
 import os
+from collections import OrderedDict
 from pathlib import Path
 from dotenv import load_dotenv
 
@@ -15,7 +16,7 @@ DEFAULT_CONF_FILE = 'app.json'
 ENV_FILE = '.env'
 
 
-def __resource_path(file_name: str = ''):
+def resource_path(file_name: str = ''):
     if os.path.exists(os.path.join(USER_CONFIG_DIR, file_name)):
         return os.path.join(USER_CONFIG_DIR, file_name)
     elif (hasattr(sys, '_MEIPASS')
@@ -27,22 +28,29 @@ def __resource_path(file_name: str = ''):
         return os.getcwd() + '/' + file_name
 
 
-def load_env() -> None:
-    load_dotenv(dotenv_path=__resource_path(ENV_FILE))
+class ConfigLoader(OrderedDict):
+    def __init__(self):
+        super().__init__()
+        load_dotenv(dotenv_path=resource_path(ENV_FILE))
 
+    def __load_conf(self, conf_name: str = '') -> None:
+        file = resource_path(f'{conf_name}.json')
 
-def load_conf(conf_name: str = '') -> dict:
-    file = __resource_path(f'{conf_name}.json')
+        if not os.path.exists(file):
+            print(f'*** configuration{' for ' + conf_name if conf_name and conf_name != '-' else ''} '
+                  f'not found. loading default {DEFAULT_CONF_FILE} ***\n')
+            file = resource_path(DEFAULT_CONF_FILE)
 
-    if not os.path.exists(file):
-        print(f'*** configuration {'for' + conf_name if conf_name and conf_name != '-' else ''}'
-              f'not found. loading default {DEFAULT_CONF_FILE} ***\n')
-        file = __resource_path(DEFAULT_CONF_FILE)
+        with open(file, 'r') as f:
+            conf = json.load(f)
 
-    with open(file, 'r') as f:
-        conf = json.load(f)
+        self.__setitem__(conf_name, conf)
 
-    return conf
+    def load(self, conf_name: str = '') -> dict:
+        if conf_name not in self.__dict__.keys():
+            self.__load_conf(conf_name)
+
+        return self.__getitem__(conf_name)
 
 
 def add_update_conf(file: str) -> None:
