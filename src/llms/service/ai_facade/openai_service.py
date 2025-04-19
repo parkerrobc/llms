@@ -31,8 +31,11 @@ class OpenAIService(AIAbstractClass):
             method_args.__setitem__('stream', True)
         if use_tools:
             method_args.__setitem__('tools', self.tool_box.tools)
+            method_args.__setitem__('tool_choice', 'auto')
 
         response = self.OPENAI.chat.completions.create(**method_args)
+
+        messages = method_args['messages']
 
         if not stream:
             if not response.choices:
@@ -51,34 +54,25 @@ class OpenAIService(AIAbstractClass):
                     yield choice.delta.content or ''
         else:
             for choice in response.choices:
-                if use_tools:
-                    if choice.finish_reason == 'tool_calls':
-                        message = choice.message
+                message = choice.message
 
-                        messages = method_args['messages']
-                        tool_calls = message.tool_calls
+                if message.tool_calls:
+                    for tool_call in message.tool_calls:
+                        tool_call_id = tool_call.id
+                        name = tool_call.function.name
+                        arguments = tool_call.function.arguments
 
-                        if tool_calls:
-                            messages.append(message)
-                            for tool_call in tool_calls:
-                                name = tool_call.function.name
-                                arguments = tool_call.function.arguments
-                                tool_result = self.tool_box.handle_tool_call(tool_call.id, name, arguments)
-                                messages.append(tool_result)
+                        tool_result = self.tool_box.handle_tool_call(tool_call_id, name, arguments)
 
-                                method_args.__setitem__('messages', messages)
-                                method_args.__delitem__('tools')
+                        messages.append(message.model_dump())
+                        messages.append(tool_result)
 
-                                print(f'messages: {messages}')
+                        yield tool_result['content']
 
-                                second_response = self.call_openai_api(method_args, False, False)
+                    tool_response = self.OPENAI.chat.completions.create(model=method_args['model'], messages=messages)
 
-                                for chunk in second_response:
-                                    print(f'chunk: {chunk}')
-                                    yield chunk
-
-                        print(f'choice: {choice.message.content}')
-                        yield choice.message.content or ''
+                    for tool_choice in tool_response.choices:
+                        yield tool_choice.message.content or ''
                 else:
                     yield choice.message.content or ''
 
@@ -99,7 +93,7 @@ class OpenAIService(AIAbstractClass):
     def make_assistant_request(self, stream: bool, use_tools: bool) -> str:
         messages = [
             {
-                "role": "system",
+                "role": "developer",
                 "content": self.tone
             }
         ]
@@ -117,15 +111,15 @@ class OpenAIService(AIAbstractClass):
         yield from self.call_openai_api(method_args, stream, use_tools)
 
     def message_builder(self, tone: str = '', request: str = '') -> []:
-        system_content = f"{self.tone}. {tone}" if tone else self.tone
+        developer_content = f"{self.tone}. {tone}" if tone else self.tone
         user_content = (request or self.config['request']) \
             if self.request_char_limit <= 0 \
             else (request or self.config['request'])[:self.request_char_limit]
 
         messages = [
             {
-                "role": "system",
-                "content": system_content
+                "role": "developer",
+                "content": developer_content
             },
             {
                 "role": "user",

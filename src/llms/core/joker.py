@@ -22,4 +22,4 @@ class Joker:
         tone = f"{self.TONE} {tone}" if tone else self.TONE
         request = self.REQUEST.replace('{joke_type}', joke_type).replace('{audience}', audience)
 
-        return next(ai_facade.make_request(tone, request))
+        return ai_facade.make_request(tone, request)

@@ -1,7 +1,7 @@
 import json
 
 from llms.core.classes import Website
-from llms.core import WebScanner, BrochureMaker
+from llms.core import WebScanner, BrochureMaker, Joker
 
 from helpers import inject, view_user_conf
 
@@ -12,14 +12,14 @@ models = ['-'] + view_user_conf()
 class ToolBox:
 
     def scan_website(self, model: str, url: str) -> str:
-        print(f'*** scanning {url} with {model}')
+        print(f'*** scanning {url} with {model} ***')
         website = Website(url)
         web_scanner = WebScanner()
         scan_results = web_scanner.scan_website(model, website)
         return scan_results
 
     def create_brochure(self, model: str, url: str, tone: str = None) -> str:
-        print(f'*** creating brochure for {url} with {model} and tone {tone}')
+        print(f'*** creating brochure for {url} with {model} and tone {tone} ***')
         website = Website(url)
         web_scanner = WebScanner()
         brochure_maker = BrochureMaker()
@@ -34,9 +34,20 @@ class ToolBox:
         return result
 
     def simple_request(self, model: str, request: str) -> str:
-        print(f'*** asking {request} to {model}')
+        print(f'*** asking {request} to {model} ***')
         ai_facade = self.ai_service.get(model)
         response = ai_facade.make_request(tone='', request=request)
+
+        result = ''
+        for value in response:
+            result += value
+
+        return result
+
+    def tell_joke(self, model: str, joke_type: str, audience: str, tone: str = None) -> str:
+        print(f'*** telling a {joke_type} joke to {audience} with an {tone} tone ***')
+        joker = Joker()
+        response = joker.tell_joke(model, joke_type, audience, tone)
 
         result = ''
         for value in response:
@@ -121,10 +132,43 @@ class ToolBox:
         }
     }
 
+    __tell_joke_function = {
+        "name": "tell_joke",
+        "description": "Creates a joke using parameters. You should call this whenever someone asks 'use <model> to "
+                       "tell a <joke_type> in a <tone> tone for an audience of <audience>'; or any variation of "
+                       "someone asking for a joke.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "model": {
+                    "type": "string",
+                    "enum": models,
+                    "description": "This is the model defined in your system content as 'model=<model_name>'",
+                    "default": '-'
+                },
+                "joke_type": {
+                    "type": "string",
+                    "description": "Type of joke to make for a given audience"
+                },
+                "tone": {
+                    "type": "string",
+                    "description": "The tone the joke should be made in"
+                },
+                "audience": {
+                    "type": "string",
+                    "description": "The audience of the joke; i.e. who wants to hear the joke"
+                }
+            },
+            "required": ["model", "joke_type", "audience"],
+            "additionalProperties": False
+        }
+    }
+
     __functions = {
         "simple_request": simple_request,
         "create_brochure": create_brochure,
-        "scan_website": scan_website
+        "scan_website": scan_website,
+        "tell_joke": tell_joke,
     }
 
     tools = [
@@ -139,29 +183,31 @@ class ToolBox:
         {
             "type": "function",
             "function": __simple_request_function
+        },
+        {
+            "type": "function",
+            "function": __tell_joke_function
         }
     ]
 
-    def handle_tool_call(self, tool_id: str, function: str, args: str) -> dict[str, str]:
+    def handle_tool_call(self, tool_call_id: str, function: str, args: str) -> dict[str, str]:
         arguments = json.loads(args)
 
         if function not in self.__functions:
             return {
+                "tool_call_id": tool_call_id,
                 "role": "tool",
-                "content": 'no tool found',
-                "tool_call_id": tool_id,
-                "name": function
+                "name": function,
+                "content": 'no tool found'
             }
 
         tool_response = self.__functions[function](self, **arguments)
 
         response = {
+            "tool_call_id": tool_call_id,
             "role": "tool",
-            "content": tool_response,
-            "tool_call_id": tool_id,
-            "name": function
+            "name": function,
+            "content": tool_response
         }
-
-        print(json.dumps(response))
 
         return response

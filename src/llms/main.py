@@ -1,9 +1,9 @@
 from argparse import Namespace
 import uuid
 
-from llms.core import BrochureMaker, WebScanner, Joker, ToolBox
+from llms.core import ToolBox
 from llms.core.battle_sim import BattleSim
-from llms.core.classes import Website, Model
+from llms.core.classes import Model
 
 from llms.service import (AIService,
                           display_markdown,
@@ -26,36 +26,26 @@ container.register('tool_box', tool_box)
 
 
 def create_brochure(args: Namespace) -> None:
-    web_scanner = WebScanner()
-    brochure_maker = BrochureMaker()
+    brochure = tool_box.create_brochure(args.provider, args.url, args.tone)
 
-    website = Website(args.url)
-
-    scan_results = web_scanner.scan_website(args.provider, website)
-    brochure = brochure_maker.create_brochure(args.provider, args.tone, website.title, scan_results)
-
-    for chunk in brochure:
-        display_markdown(chunk)
+    display_markdown(brochure.replace("```", ""))
 
     return
 
 
 def simple_request(args: Namespace) -> None:
-    ai_facade = ai_service.get(args.provider)
+    response = tool_box.simple_request(args.tone, args.request)
 
-    response = ai_facade.make_request(args.tone, args.request)
-
-    for value in response:
-        print(f'{value}\n')
+    print(response)
 
     return
 
 
 def make_joke(args: Namespace) -> None:
-    joker = Joker()
-    joke = joker.tell_joke(args.provider, args.tone, args.jokeType, args.audience)
+    joke = tool_box.tell_joke(args.provider, args.tone, args.jokeType, args.audience)
 
     print(joke)
+
     return
 
 
@@ -92,7 +82,6 @@ def chat_bot(args: Namespace) -> None:
     ai_facade = ai_service.get(model=args.provider)
 
     def chat(message, history):
-        print(history)
         ai_facade.update_messages(user_message=message, full_history=history)
         response = ai_facade.make_assistant_request(stream=False, use_tools=True)
         result = ''
