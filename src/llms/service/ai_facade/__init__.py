@@ -33,11 +33,12 @@ class AIFacade:
             -> Union[Generator[str, None, None], str]:
         return self.AI.make_request(tone, request, json, stream, use_tools)
 
-    def update_messages(self, message: str = None, user_message: str = None, full_history: [] = None) -> None:
-        self.AI.update_messages(message, user_message, full_history)
+    def update_messages(self, use_system_message: bool = False, system_message: str = None,
+                        assistant_message: str = None, user_message: str = None, full_history: [] = None) -> None:
+        self.AI.update_messages(use_system_message, system_message, assistant_message, user_message, full_history)
 
-    def make_assistant_request(self, stream: bool = False, use_tools: bool = False) -> str:
-        return self.AI.make_assistant_request(stream, use_tools)
+    def make_assistant_request(self, json: bool = False, stream: bool = False, use_tools: bool = False) -> str:
+        return self.AI.make_assistant_request(json, stream, use_tools)
 
     def get_name(self) -> str:
         return self.AI.get_name()

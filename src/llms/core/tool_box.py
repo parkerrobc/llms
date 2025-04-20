@@ -10,6 +10,12 @@ models = ['-'] + view_user_conf()
 
 @inject(ai_service='ai_service')
 class ToolBox:
+    __ticket_prices = {"london": "$799", "paris": "$899", "tokyo": "$1400", "berlin": "$499"}
+
+    def get_ticket_price(self, destination_city: str) -> str:
+        print(f'*** getting ticket price for {destination_city} ***')
+        city = destination_city.lower()
+        return self.__ticket_prices.get(city, "Unknown")
 
     def scan_website(self, model: str, url: str) -> str:
         print(f'*** scanning {url} with {model} ***')
@@ -54,6 +60,24 @@ class ToolBox:
             result += value
 
         return result
+
+    __get_ticket_price_function = {
+        "name": "get_ticket_price",
+        "description": "Get the price of a return ticket to the destination city. "
+                       "Call this whenever you need to know the ticket price, for example when a customer asks "
+                       "'How much is a ticket to this city'",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "destination_city": {
+                    "type": "string",
+                    "description": "The city that the customer wants to travel to",
+                },
+            },
+            "required": ["destination_city"],
+            "additionalProperties": False
+        }
+    }
 
     __scan_website_function = {
         "name": "scan_website",
@@ -165,13 +189,18 @@ class ToolBox:
     }
 
     __functions = {
+        "get_ticket_price": get_ticket_price,
         "simple_request": simple_request,
         "create_brochure": create_brochure,
         "scan_website": scan_website,
         "tell_joke": tell_joke,
     }
 
-    tools = [
+    __tools = [
+        {
+            "type": "function",
+            "function": __get_ticket_price_function
+        },
         {
             "type": "function",
             "function": __scan_website_function
@@ -190,24 +219,15 @@ class ToolBox:
         }
     ]
 
-    def handle_tool_call(self, tool_call_id: str, function: str, args: str) -> dict[str, str]:
+    def get_tools(self):
+        return self.__tools
+
+    def handle_tool_call(self, function: str, args: str) -> str:
         arguments = json.loads(args)
 
         if function not in self.__functions:
-            return {
-                "tool_call_id": tool_call_id,
-                "role": "tool",
-                "name": function,
-                "content": 'no tool found'
-            }
+            return ''
 
         tool_response = self.__functions[function](self, **arguments)
 
-        response = {
-            "tool_call_id": tool_call_id,
-            "role": "tool",
-            "name": function,
-            "content": tool_response
-        }
-
-        return response
+        return tool_response

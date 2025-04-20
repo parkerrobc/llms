@@ -17,12 +17,13 @@ class GoogleService(AIAbstractClass):
 
         return
 
-    def update_messages(self, message: str = '', user_message: str = '', full_history: [] = None) -> None:
+    def update_messages(self, use_system_message: bool, system_message: str, assistant_message: str,
+                        user_message: str, full_history: []) -> None:
         """
         TODO
         """
 
-    def make_assistant_request(self, stream: bool, use_tools: bool) -> str:
+    def make_assistant_request(self, json: bool, stream: bool, use_tools: bool) -> str:
         pass
 
     def make_request(self, tone: str, request: str, json: bool, stream: bool, use_tools: bool) \
