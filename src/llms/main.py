@@ -82,12 +82,12 @@ def chat_bot(args: Namespace) -> None:
     ai_facade = ai_service.get(model=args.provider)
 
     def chat(message, history):
-        ai_facade.update_messages(user_message=message, full_history=history)
-        response = ai_facade.make_assistant_request(stream=False, use_tools=True)
+        ai_facade.update_messages(use_system_message=True, user_message=message, full_history=history)
+        response = ai_facade.make_assistant_request(json=False, stream=True, use_tools=True)
         result = ''
 
         for chunk in response:
-            result += chunk
+            result += chunk.replace('<', '"').replace('>', '"').replace('/', '')
             yield result
 
     create_chat_display(chat)

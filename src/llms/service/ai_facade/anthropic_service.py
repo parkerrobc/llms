@@ -17,13 +17,14 @@ class AnthropicService(AIAbstractClass):
 
         return
 
-    def update_messages(self, message: str = '', user_message: str = '', full_history: [] = None):
+    def update_messages(self, use_system_message: bool, system_message: str, assistant_message: str,
+                        user_message: str, full_history: []) -> None:
         if full_history:
             self.MESSAGES = full_history
-        if message:
+        if assistant_message:
             self.MESSAGES.append({
                     "role": "assistant",
-                    "content": message
+                    "content": assistant_message
                 })
         if user_message:
             self.MESSAGES.append({
@@ -31,7 +32,7 @@ class AnthropicService(AIAbstractClass):
                 "content": user_message
             })
 
-    def make_assistant_request(self, stream: bool, use_tools: bool) -> str:
+    def make_assistant_request(self, json: bool, stream: bool, use_tools: bool) -> str:
         method_args: dict = {
             'model': self.config['model'],
             'max_tokens': self.config['maxTokens'],
