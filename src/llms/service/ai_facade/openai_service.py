@@ -1,6 +1,5 @@
-from json import dumps, loads
 import sys
-from typing import Generator, Union
+from typing import Generator
 
 from openai import OpenAI, Stream, BadRequestError
 from openai.types.chat import ChatCompletionMessageToolCall, ChatCompletionChunk, ChatCompletion, ChatCompletionMessage
@@ -14,7 +13,7 @@ from helpers import inject
 class OpenAIService(AIAbstractClass):
     def __init__(self, config: OpenAIConfig):
         super().__init__(config)
-        self.MESSAGES: [] = []
+        self.MESSAGES: list[dict | ChatCompletionMessage] = []
         self.OPENAI: OpenAI
         self.ignore_tools = False
 
@@ -27,7 +26,9 @@ class OpenAIService(AIAbstractClass):
         else:
             self.OPENAI = OpenAI()
 
-    def __handle_tool_call(self, tool_call: ChatCompletionMessageToolCall | dict) \
+        self.instantiate_messages(use_system_message=True)
+
+    def __handle_tool_call(self, tool_call: ChatCompletionMessageToolCall) \
             -> dict[str, str | dict[str, str]]:
         if isinstance(tool_call, dict):
             tool_call_id = tool_call['id']
@@ -48,7 +49,7 @@ class OpenAIService(AIAbstractClass):
         }
 
     def __handle_stream_response(self, response: Stream[ChatCompletionChunk]) \
-            -> Generator[str, None, None]:
+            -> Generator[str]:
         if not response:
             print("\nOpenAI Library request failed\n")
             sys.exit(1)
@@ -90,7 +91,7 @@ class OpenAIService(AIAbstractClass):
                     yield choice.delta.content
 
     def __handle_response(self, response: ChatCompletion) \
-            -> Union[Generator[str, None, None], str]:
+            -> Generator[str]:
         if not response.choices:
             print("\nOpenAI Library request failed\n")
             sys.exit(1)
@@ -110,7 +111,7 @@ class OpenAIService(AIAbstractClass):
                 yield choice.message.content or ''
 
     def call_openai_api(self, json: bool, stream: bool, use_tools: bool) \
-            -> Union[Generator[str, None, None], str]:
+            -> Generator[str]:
 
         method_args: dict = {
             'model': self.config['model'],
@@ -141,17 +142,32 @@ class OpenAIService(AIAbstractClass):
         else:
             yield from self.__handle_response(response)
 
-    def update_messages(self, use_system_message: bool = False, system_message: str = None,
-                        assistant_message: str = None, user_message: str = None, full_history: [] = None,
-                        single_message: dict | ChatCompletionMessage = None):
-        if full_history:
-            self.MESSAGES = full_history
+    def instantiate_messages(self, system_message: str = None, use_system_message: bool = False):
         if use_system_message:
-            if len(self.MESSAGES) == 0 or full_history:
-                self.MESSAGES = [{
-                        "role": "system",
-                        "content": f"{self.tone}. {system_message}" if system_message else self.tone
-                    }] + self.MESSAGES
+            self.MESSAGES = [{
+                "role": "system",
+                "content": f"{self.tone}. {system_message}" if system_message else self.tone
+            }]
+            if self.config['request']:
+                self.MESSAGES.append({
+                    "role": "user",
+                    "content": f'{self.config['request']}'
+                })
+        else:
+            self.MESSAGES = []
+
+    def update_messages(self, use_system_message: bool = False, system_message: str = None,
+                        assistant_message: str = None, user_message: str = None, full_history: list[dict] = None,
+                        assistant_thread: bool = False, single_message: dict | ChatCompletionMessage = None):
+        if assistant_thread:
+            return
+
+        if full_history:
+            self.instantiate_messages(system_message, use_system_message)
+            self.MESSAGES += full_history
+        elif use_system_message:
+            self.instantiate_messages(system_message, use_system_message)
+
         if assistant_message:
             self.MESSAGES.append({
                     "role": "assistant",
@@ -162,13 +178,14 @@ class OpenAIService(AIAbstractClass):
                 "role": "user",
                 "content": user_message
             })
+
         if single_message:
             self.MESSAGES.append(single_message)
 
-    def make_assistant_request(self, json: bool, stream: bool, use_tools: bool) -> str:
+    def make_assistant_request(self, json: bool, stream: bool, use_tools: bool) -> Generator[str]:
         yield from self.call_openai_api(json, stream, use_tools)
 
     def make_request(self, tone: str, request: str, json: bool, stream: bool, use_tools: bool) \
-            -> Union[Generator[str, None, None], str]:
-        self.update_messages(use_system_message=True, system_message=tone, user_message=request, full_history=[])
+            -> Generator[str]:
+        self.update_messages(use_system_message=True, system_message=tone, user_message=request, full_history=None)
         yield from self.call_openai_api(json, stream, use_tools)

@@ -1,3 +1,5 @@
+from typing import Generator
+
 from helpers import inject
 
 
@@ -14,7 +16,7 @@ class Joker:
     Tell a {joke_type} joke for an audience of {audience}.
     """
 
-    def tell_joke(self, model: str, tone: str, joke_type: str, audience: str) -> str:
+    def tell_joke(self, model: str, tone: str, joke_type: str, audience: str) -> Generator[str]:
         """
         :return: -> str the joke
         """
@@ -22,4 +24,4 @@ class Joker:
         tone = f"{self.TONE} {tone}" if tone else self.TONE
         request = self.REQUEST.replace('{joke_type}', joke_type).replace('{audience}', audience)
 
-        return ai_facade.make_request(tone, request)
+        yield ai_facade.make_request(tone, request)

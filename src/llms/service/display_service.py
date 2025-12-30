@@ -11,7 +11,7 @@ def display_markdown(brochure: str) -> None:
     console.print(Markdown(brochure))
 
 
-def create_request_display(function: Callable, models: [str]) -> None:
+def create_request_display(function: Callable, models: list[str]) -> None:
     view = gr.Interface(
         fn=function,
         inputs=[
@@ -24,7 +24,7 @@ def create_request_display(function: Callable, models: [str]) -> None:
     view.launch(inbrowser=True)
 
 
-def create_model_selection_display(function: Callable, models: [str]) -> None:
+def create_model_selection_display(function: Callable, models: list[str]) -> None:
     view = gr.Interface(
         fn=function,
         inputs=[
@@ -39,7 +39,6 @@ def create_model_selection_display(function: Callable, models: [str]) -> None:
 def create_chat_display(function: Callable) -> None:
     view = gr.ChatInterface(
         fn=function,
-        type="messages",
         flagging_mode="never")
 
     view.launch(inbrowser=True)

@@ -5,7 +5,7 @@ from .ai_facade import AIFacade
 
 class AIService(OrderedDict):
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+        super().__init__(args, **kwargs)
 
     def __instantiate_ai(self, model: str, tone: str, key: str) -> None:
         print(f'*** instantiating {model}{' with' + key if key else ''} ***')

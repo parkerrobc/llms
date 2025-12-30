@@ -6,14 +6,17 @@ Built following the Udemy Course https://www.udemy.com/course/llm-engineering-ma
 
 ##### Environment
 
-Project is set up to use Anaconda with an `environment.yml` file and PyInstaller to compile to an exe.
+Project is set up to use PyEnv with a `requirements.txt` file and PyInstaller to compile to an exe.
 
 ##### Set up
 
-1. Install and activate conda environment
+1. Install and activate pyenv environment
     ```bash
-   conda env create --file environment.yml
-   conda activate ai_llms
+   pyenv local 3.13.11
+   python -m venv .venv
+   source .venv/bin/activate
+   pip install --upgrade pip
+   pip install -r requirements.txt
    ```
 2. Create `.env` file with your OpenAIApiKey and place it into the `src` directory (you can set this in the `app.json` file if you wish not to create this or in a custom `<yourProvider>.json` file: see below)
    ```text

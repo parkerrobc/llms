@@ -4,7 +4,7 @@ from llms.core.classes import Model
 
 
 class BattleSim:
-    def __init__(self, models: [Model]) -> None:
+    def __init__(self, models: list[Model]) -> None:
         self.MODELS: OrderedDict = OrderedDict()
 
         print(f'\n***** LLM BATTLE *****\n')
@@ -12,36 +12,31 @@ class BattleSim:
             name = model['name']
             self.MODELS.__setitem__(f'{name}', model)
 
-    def start(self, number_of_interactions: int) -> None:
+    def start(self, number_of_interactions: int, first_message: str) -> None:
         for interaction in range(number_of_interactions):
-            for index, (key, value) in enumerate(self.MODELS.items()):
-                name = value['name']
+            for i, (key, model) in enumerate(self.MODELS.items()):
+                name = model['name']
 
-                if interaction == 0 and index == 0:
-                    message = value['message']
-                    print(f'\n{name.upper()}:\n{message}\n')
-                    value['service'].update_messages(message=message)
-                    continue
+                if interaction == 0 and i == 0 and first_message:
+                    print(f'\n{name.upper()}:\n{first_message}\n')
+                    model['service'].update_messages(assistant_message=first_message)
 
-                user_messages = [v['message'] if v['message'] else None
-                                 for i, (k, v) in
-                                 enumerate(self.MODELS.items()) if i != index and i > index]
-                user_messages = user_messages + [v['message'] if v['message'] else None
-                                                 for i, (k, v) in
-                                                 enumerate(self.MODELS.items()) if i != index and i < index]
+                user_messages = [other_model['response']
+                                 for k, other_model in self.MODELS.items()
+                                 if k != key and other_model['response'] is not None]
 
                 for user_message in user_messages:
                     if user_message:
-                        value['service'].update_messages(user_message=user_message)
+                        model['service'].update_messages(user_message=user_message)
 
-                response = value['service'].make_assistant_request()
+                response = model['service'].make_assistant_request()
 
-                new_message: str = ''
+                parsed_response: str = ''
 
                 for info in response:
-                    new_message += info
+                    parsed_response += info
 
-                print(f'\n{name.upper()}:\n{new_message}\n')
-                value['service'].update_messages(message=new_message)
+                print(f'\n{name.upper()}:\n{parsed_response}\n')
+                model['service'].update_messages(assistant_message=parsed_response, assistant_thread=True)
 
-                self.MODELS.__setitem__(key, value | {'message': new_message})
+                self.MODELS.__setitem__(key, model | {'response': parsed_response})
