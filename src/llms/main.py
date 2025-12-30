@@ -25,8 +25,7 @@ container.register('tool_box', tool_box)
 def create_brochure(args: Namespace) -> None:
     brochure = tool_box.create_brochure(args.provider, args.url, args.tone)
 
-    for chunk in brochure:
-        display_markdown(chunk.replace("```", ""))
+    display_markdown(brochure.replace("```", ""))
 
     return
 
@@ -34,8 +33,7 @@ def create_brochure(args: Namespace) -> None:
 def simple_request(args: Namespace) -> None:
     response = tool_box.simple_request(args.tone, args.request)
 
-    for chunk in response:
-        print(chunk)
+    print(response)
 
     return
 
@@ -43,8 +41,7 @@ def simple_request(args: Namespace) -> None:
 def make_joke(args: Namespace) -> None:
     response = tool_box.tell_joke(args.provider, args.tone, args.jokeType, args.audience)
 
-    for chunk in response:
-        print(chunk)
+    print(response)
 
     return
 

@@ -3,7 +3,6 @@ import json
 from helpers import inject
 from llms.core.classes import Website
 
-
 def process_links(links: dict) -> str:
     """
         processes a json object in the following format:
@@ -30,11 +29,10 @@ def process_links(links: dict) -> str:
             continue
 
         link_url = link['url']
-        link_type = link['type'] if 'type' in link else ''
 
         link_website = Website(link_url)
         link_content += f"""
-            {link_type}
+            {link}
             {link_website.get_contents()}
         """
 
@@ -79,6 +77,7 @@ class WebScanner:
 
         :return: -> str containing details about the website
         """
+        print(f'*** scanning website {website.url} ***')
         ai_facade = self.ai_service.get(model)
 
         scan_request = (self.REQUEST
@@ -87,10 +86,17 @@ class WebScanner:
 
         scan_results = ai_facade.make_request(self.TONE, scan_request, True)
 
+        links_str = ''
+
+        links = ''
+
         try:
-            links = json.loads(next(scan_results))
+            for chunk in scan_results:
+                links_str += chunk
+
+            links = process_links(json.loads(links_str))
         except Exception as e:
             print("\nError parsing link scan results: {}\n".format(e))
-            return website.get_contents()
 
-        return f"{website.title}  {website.get_contents()}  {process_links(links)}"
+        print(f'*** scan complete ***')
+        return f"{website.title}  {website.get_contents()}  {links}"
