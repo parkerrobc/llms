@@ -1,10 +1,7 @@
 from argparse import Namespace
 import uuid
-
-from llms.core import ToolBox
-from llms.core.battle_sim import BattleSim
+from llms.core import ToolBox, BattleSim
 from llms.core.classes import Model
-
 from llms.service import (AIService,
                           display_markdown,
                           create_request_display,
@@ -28,7 +25,8 @@ container.register('tool_box', tool_box)
 def create_brochure(args: Namespace) -> None:
     brochure = tool_box.create_brochure(args.provider, args.url, args.tone)
 
-    display_markdown(brochure.replace("```", ""))
+    for chunk in brochure:
+        display_markdown(chunk.replace("```", ""))
 
     return
 
@@ -36,15 +34,17 @@ def create_brochure(args: Namespace) -> None:
 def simple_request(args: Namespace) -> None:
     response = tool_box.simple_request(args.tone, args.request)
 
-    print(response)
+    for chunk in response:
+        print(chunk)
 
     return
 
 
 def make_joke(args: Namespace) -> None:
-    joke = tool_box.tell_joke(args.provider, args.tone, args.jokeType, args.audience)
+    response = tool_box.tell_joke(args.provider, args.tone, args.jokeType, args.audience)
 
-    print(joke)
+    for chunk in response:
+        print(chunk)
 
     return
 
@@ -52,16 +52,16 @@ def make_joke(args: Namespace) -> None:
 def battle_sim(args: Namespace) -> None:
     start_name = f'{'default' if args.provider == '-' else args.provider}-{str(uuid.uuid4())[3::4]}'
     ai_facade = ai_service.get(model=args.provider, key=start_name)
-    models: [Model] = [
-        {'name': f'{start_name}-{ai_facade.get_name()}', 'service': ai_facade, 'message': args.firstMessage}]
+    models: list[Model] = [
+        {'name': f'{start_name}-{ai_facade.get_name()}', 'service': ai_facade, 'response': ''}]
 
     for model in args.models:
         name = f'{'default' if model == '-' else model}-{str(uuid.uuid4())[3::4]}'
         model_service = ai_service.get(model=model, key=name)
-        models.append({'name': f'{name}-{model_service.get_name()}', 'service': model_service, 'message': ''})
+        models.append({'name': f'{name}-{model_service.get_name()}', 'service': model_service, 'response': ''})
 
     battle = BattleSim(models)
-    battle.start(args.numberOfBattles)
+    battle.start(args.numberOfBattles, args.firstMessage)
 
 
 def interactive(args: Namespace) -> None:
@@ -98,7 +98,7 @@ def add_config(args: Namespace) -> None:
     return
 
 
-def list_config(args: Namespace) -> None:
+def list_config(_args: Namespace) -> None:
     file_names = view_user_conf()
 
     for file_name in file_names:

@@ -1,15 +1,14 @@
 import sys
-from typing import Generator, Union
+from typing import Generator
 
 import anthropic
 
 from .ai_abc import AIAbstractClass, AnthropicConfig
 
-
 class AnthropicService(AIAbstractClass):
     def __init__(self, config: AnthropicConfig):
         super().__init__(config)
-        self.MESSAGES: [] = []
+        self.MESSAGES: list[dict] = []
         if config['key']:
             self.ANTHROPIC = anthropic.Anthropic(api_key=config['key'])
         else:
@@ -18,7 +17,14 @@ class AnthropicService(AIAbstractClass):
         return
 
     def update_messages(self, use_system_message: bool, system_message: str, assistant_message: str,
-                        user_message: str, full_history: []) -> None:
+                        user_message: str, full_history: list[dict], assistant_thread: bool = False,) -> None:
+
+        for history in full_history:
+            if 'metadata' in history:
+                del history['metadata']
+            if 'options' in history:
+                del history['options']
+
         if full_history:
             self.MESSAGES = full_history
         if assistant_message:
@@ -32,13 +38,13 @@ class AnthropicService(AIAbstractClass):
                 "content": user_message
             })
 
-    def make_assistant_request(self, json: bool, stream: bool, use_tools: bool) -> str:
+    def make_assistant_request(self, json: bool, stream: bool, use_tools: bool) -> Generator[str]:
         method_args: dict = {
             'model': self.config['model'],
             'max_tokens': self.config['maxTokens'],
             'temperature': self.config['temperature'],
             'system': self.tone,
-            'messages': self.MESSAGES,
+            'messages': self.MESSAGES
         }
 
         if stream:
@@ -46,7 +52,7 @@ class AnthropicService(AIAbstractClass):
         else:
             yield from self.__simple_request(method_args)
 
-    def message_builder(self, request: str) -> []:
+    def message_builder(self, request: str) -> list[dict]:
         user_content = (request or self.config['request']) \
             if self.request_char_limit <= 0 \
             else (request or self.config['request'])[:self.request_char_limit]
@@ -60,7 +66,7 @@ class AnthropicService(AIAbstractClass):
 
         return messages
 
-    def __simple_request(self, method_args) -> str:
+    def __simple_request(self, method_args) -> Generator[str]:
         response = self.ANTHROPIC.messages.create(**method_args)
 
         if not response.content:
@@ -70,7 +76,7 @@ class AnthropicService(AIAbstractClass):
         for content in response.content:
             yield content.text
 
-    def __stream_request(self, method_args) -> str:
+    def __stream_request(self, method_args) -> Generator[str]:
         response = self.ANTHROPIC.messages.stream(**method_args)
 
         if not response:
@@ -82,7 +88,7 @@ class AnthropicService(AIAbstractClass):
                 yield text.replace("\n", " ").replace("\r", " ")
 
     def make_request(self, tone: str, request: str, json: bool, stream: bool, use_tools: bool) \
-            -> Union[Generator[str, None, None], str]:
+            -> Generator[str]:
 
         messages = self.message_builder(request)
 

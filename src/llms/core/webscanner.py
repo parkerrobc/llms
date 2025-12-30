@@ -4,7 +4,7 @@ from helpers import inject
 from llms.core.classes import Website
 
 
-def process_links(links: json) -> str:
+def process_links(links: dict) -> str:
     """
         processes a json object in the following format:
             {

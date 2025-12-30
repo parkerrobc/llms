@@ -7,7 +7,6 @@ headers = {
                   "Safari/537.36"
 }
 
-
 class Website:
     """
     A utility class to represent a Website that we have scraped, now with links.
@@ -17,7 +16,7 @@ class Website:
         self.url = url
         self.title: str
         self.text: str
-        self.links: []
+        self.links: list[str]
 
         try:
             response = requests.get(url, headers=headers)

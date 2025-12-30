@@ -1,4 +1,5 @@
 import json
+from typing import Generator
 
 from llms.core.classes import Website
 from llms.core import WebScanner, BrochureMaker, Joker
@@ -49,6 +50,7 @@ class ToolBox:
             result += value
 
         return result
+
 
     def tell_joke(self, model: str, joke_type: str, audience: str, tone: str = None) -> str:
         print(f'*** telling a {joke_type} joke to {audience} with an {tone} tone ***')

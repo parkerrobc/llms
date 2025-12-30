@@ -37,8 +37,8 @@ class ConfigLoader(OrderedDict):
         file = resource_path(f'{conf_name}.json')
 
         if not os.path.exists(file):
-            print(f'*** configuration{' for ' + conf_name if conf_name and conf_name != '-' else ''} '
-                  f'not found. loading default {DEFAULT_CONF_FILE} ***\n')
+            conf_text = f' for {conf_name}' if conf_name and conf_name != '-' else ''
+            print(f'*** configuration{conf_text} not found. loading default {DEFAULT_CONF_FILE} ***\n')
             file = resource_path(DEFAULT_CONF_FILE)
 
         with open(file, 'r') as f:
@@ -65,7 +65,7 @@ def add_update_conf(file: str) -> None:
     shutil.copy(file, os.path.join(USER_CONFIG_DIR, file_name))
 
 
-def view_user_conf() -> [str]:
+def view_user_conf() -> list[str]:
     if not os.path.exists(USER_CONFIG_DIR):
         print('No user configurations exist')
         sys.exit(1)

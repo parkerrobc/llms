@@ -1,4 +1,4 @@
-from typing import Union, Generator
+from typing import Generator
 
 from helpers import inject
 
@@ -22,7 +22,7 @@ class BrochureMaker:
     """
 
     def create_brochure(self, model: str, tone: str, title: str, details: str, stream: bool = False) \
-            -> Union[Generator[str, None, None]]:
+            -> Generator[str]:
         """
             creates an AI generated markdown brochure using self.TONE and self.REQUEST
 

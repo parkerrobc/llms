@@ -1,5 +1,5 @@
 from abc import abstractmethod, ABC
-from typing import TypedDict, NotRequired, Required
+from typing import TypedDict, NotRequired, Required, Generator
 
 
 class BaseConfig(TypedDict):
@@ -38,20 +38,20 @@ class AIAbstractClass(ABC):
     @abstractmethod
     def __init__(self, config: AnthropicConfig | OpenAIConfig | GoogleConfig) -> None:
         self.config: AnthropicConfig | OpenAIConfig | GoogleConfig = config
-        self.tone = f'model={config['name']} {config['tone']}'
+        self.tone = config['tone']
         self.request_char_limit = config['requestCharLimit'] or 0
 
     @abstractmethod
-    def make_request(self, tone: str, request: str, json: bool, stream: bool, use_tools: bool) -> str:
+    def make_request(self, tone: str, request: str, json: bool, stream: bool, use_tools: bool) -> Generator[str]:
         raise NotImplementedError
 
     @abstractmethod
     def update_messages(self, use_system_message: bool, system_message: str, assistant_message: str,
-                        user_message: str, full_history: []) -> None:
+                        user_message: str, full_history: list[dict], assistant_thread: bool) -> None:
         raise NotImplementedError
 
     @abstractmethod
-    def make_assistant_request(self, json: bool, stream: bool, use_tools: bool) -> str:
+    def make_assistant_request(self, json: bool, stream: bool, use_tools: bool) -> Generator[str]:
         raise NotImplementedError
 
     def get_name(self) -> str:

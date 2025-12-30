@@ -2,11 +2,18 @@ import argparse
 import sys
 
 from llms import (
-    create_brochure, simple_request, make_joke, battle_sim, add_config, list_config, interactive, chat_bot)
+    create_brochure,
+    simple_request,
+    make_joke,
+    battle_sim,
+    add_config,
+    list_config,
+    interactive,
+    chat_bot)
 
 from helpers import view_user_conf
 
-providers: [str] = ['-'] + view_user_conf()
+providers: list[str] = ['-'] + view_user_conf()
 
 
 def main() -> int:

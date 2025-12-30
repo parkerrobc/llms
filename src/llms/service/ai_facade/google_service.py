@@ -1,4 +1,4 @@
-from typing import Generator, Union
+from typing import Generator
 
 import google.generativeai
 
@@ -8,7 +8,7 @@ from .ai_abc import AIAbstractClass, GoogleConfig
 class GoogleService(AIAbstractClass):
     def __init__(self, config: GoogleConfig) -> None:
         super().__init__(config)
-        self.MESSAGES: [] = []
+        self.MESSAGES = []
 
         if config['key']:
             google.generativeai.configure(api_key=config['key'])
@@ -18,16 +18,16 @@ class GoogleService(AIAbstractClass):
         return
 
     def update_messages(self, use_system_message: bool, system_message: str, assistant_message: str,
-                        user_message: str, full_history: []) -> None:
+                        user_message: str, full_history: list[dict], assistant_thread: bool = False) -> None:
         """
         TODO
         """
 
-    def make_assistant_request(self, json: bool, stream: bool, use_tools: bool) -> str:
+    def make_assistant_request(self, json: bool, stream: bool, use_tools: bool) -> Generator[str]:
         pass
 
     def make_request(self, tone: str, request: str, json: bool, stream: bool, use_tools: bool) \
-            -> Union[Generator[str, None, None], str]:
+            -> Generator[str]:
 
         user_message = (request or self.config['request']) \
             if self.request_char_limit <= 0 \
