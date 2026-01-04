@@ -48,7 +48,7 @@ Project is set up to use PyEnv with a `requirements.txt` file and PyInstaller to
 usage: llms [options]
 
 positional arguments:
-  {createBrochure,simpleRequest,makeJoke,battle,addConfig,listConfig}
+  {createBrochure,simpleRequest,makeJoke,battle,addConfig,listConfig,interactive,chatBot}
                         Available commands
     createBrochure      create brochure using ai
     simpleRequest       makes simple request to llm
@@ -56,10 +56,12 @@ positional arguments:
     battle              battle between different llms
     addConfig           add config to llm
     listConfig          list llms configurations
+    interactive         use gradio to create interactive UI
+    chatBot             use gradio to create interactive chat bot
 
 options:
   -h, --help            show this help message and exit
-  -p [{-,anthropic,openai,google-open,google}], --provider [{-,anthropic,openai,google-open,google}]
+  -p, --provider [{-,anthropic,openai,google-open,google}]
                         provider to use.
   -t [TONE], --tone [TONE]
                         tone that the llm should respond with
@@ -80,15 +82,27 @@ Your custom json files must match this format:
 
 ```json
 {
-   "tone": "As a casual, laid-back fellow, answer any inquiry with whit and an aura of charm.", // default tone that the llm should respond with
-   "request": "Tell me about yourself.", // default request
-   "model": "llama3.2", // this will be the model used with the openai library
-   "library": "openai", // see from list of libraries above
-   "baseUrl": "http://localhost:11434/v1", // you can leave this blank if you wish to call out to OpenAI directly
-   "key": "ollama", // this would be your api_key that initializes the openai library
-   "requestCharLimit": 5000, // this limits the size of each request to the llm to reduce cost. detault in the code is 100000
-   "maxTokens": 200,
-   "temperature": 0.7
+  "kbase" : [
+    {
+      "name": "some_dir",  // name of your knowledge base
+      "location": "'some location on your file system", // Location of your knowledge base
+      "type": "directory", // type of knowledge base. Currently support for 'directory'
+      "kWords": [
+        "somekeyword"  // List of strings that represent the key words used to access your knowledge base
+      ]
+    }
+  ],
+  "aiConfig": {
+    "tone": "As a casual, laid-back fellow, answer any inquiry with whit and an aura of charm.", // This is the system prompt passed to the LLM
+    "request": "Tell me about yourself.", // Default request to the LLM if you don't pass a request
+    "model": "llama3.2", // model you want to use
+    "library": "openai", // AI library you want to use
+    "baseUrl": "http://localhost:11434/v1", // URL used to access LLM (this can be blank)
+    "key": "ollama", // This is the key used to call the API
+    "requestCharLimit": 5000, 
+    "maxTokens": 200,
+    "temperature": 0.7
+  }
 }
 ```
 
