@@ -3,9 +3,10 @@ from typing import Generator
 
 import anthropic
 
-from .ai_abc import AIAbstractClass, AnthropicConfig
+from .ai_service import AIService, AnthropicConfig
 
-class AnthropicService(AIAbstractClass):
+
+class AnthropicService(AIService):
     def __init__(self, config: AnthropicConfig):
         super().__init__(config)
         self.MESSAGES: list[dict] = []
@@ -16,8 +17,8 @@ class AnthropicService(AIAbstractClass):
 
         return
 
-    def update_messages(self, use_system_message: bool, system_message: str, assistant_message: str,
-                        user_message: str, full_history: list[dict] | None, assistant_thread: bool = False,) -> None:
+    def update_messages(self, use_system_message: bool = True, system_message: str = '', assistant_message: str = '',
+                        user_message: str = '', full_history: list[dict] | None = None, assistant_thread: bool = False,) -> None:
 
         for history in (full_history or []):
             if 'metadata' in history:
@@ -38,7 +39,7 @@ class AnthropicService(AIAbstractClass):
                 "content": user_message
             })
 
-    def make_assistant_request(self, json: bool, stream: bool, use_tools: bool) -> Generator[str]:
+    def make_assistant_request(self, json: bool = False, stream: bool = False, use_tools: bool = False) -> Generator[str]:
         method_args: dict = {
             'model': self.config['model'],
             'max_tokens': self.config['maxTokens'],
@@ -87,7 +88,7 @@ class AnthropicService(AIAbstractClass):
             for text in stream.text_stream:
                 yield text.replace("\n", " ").replace("\r", " ")
 
-    def make_request(self, tone: str, request: str, json: bool, stream: bool, use_tools: bool) \
+    def make_request(self, system_message: str = '', request: str = '', json: bool = False, stream: bool = False, use_tools: bool = False) \
             -> Generator[str]:
 
         messages = self.message_builder(request)
@@ -96,7 +97,7 @@ class AnthropicService(AIAbstractClass):
             'model': self.config['model'],
             'max_tokens': self.config['maxTokens'],
             'temperature': self.config['temperature'],
-            'system': f"{self.tone}. {tone}" if tone else self.tone,
+            'system': f"{self.tone}. {system_message}" if system_message else self.tone,
             'messages': messages,
         }
 

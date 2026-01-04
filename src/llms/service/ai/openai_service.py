@@ -4,13 +4,13 @@ from typing import Generator
 from openai import OpenAI, Stream, BadRequestError
 from openai.types.chat import ChatCompletionMessageToolCall, ChatCompletionChunk, ChatCompletion, ChatCompletionMessage
 
-from .ai_abc import AIAbstractClass, OpenAIConfig
-
 from helpers import inject
+
+from .ai_service import AIService, OpenAIConfig
 
 
 @inject(tool_box='tool_box')
-class OpenAIService(AIAbstractClass):
+class OpenAIService(AIService):
     def __init__(self, config: OpenAIConfig):
         super().__init__(config)
         self.MESSAGES: list[dict | ChatCompletionMessage] = []
@@ -39,7 +39,10 @@ class OpenAIService(AIAbstractClass):
             name = tool_call.function.name or tool_call['function']['name']
             arguments = tool_call.function.arguments or tool_call['function']['arguments']
 
-        tool_result = self.tool_box.handle_tool_call(name, arguments)
+        tool_result = ''
+
+        if arguments:
+            tool_result = self.tool_box.handle_tool_call(name, arguments)
 
         return {
             "tool_call_id": tool_call_id,
@@ -54,11 +57,12 @@ class OpenAIService(AIAbstractClass):
             print("\nOpenAI Library request failed\n")
             sys.exit(1)
 
+        calls = []
+
         for chunk in response:
             if not chunk or not chunk.choices:
                 continue
             for choice in chunk.choices:
-                calls = []
                 if choice.delta.tool_calls:
                     for tool_call in choice.delta.tool_calls:
                         if len(calls) <= tool_call.index:
@@ -80,15 +84,17 @@ class OpenAIService(AIAbstractClass):
                             call["function"]["name"] += tool_call.function.name
                         if tool_call.function.arguments:
                             call["function"]["arguments"] += tool_call.function.arguments
-
-                    if calls:
-                        for call in calls:
-                            tool_result = self.__handle_tool_call(call)
-                            self.update_messages(single_message=tool_result)
-
-                    yield from self.make_assistant_request(False, True, False)
                 else:
                     yield choice.delta.content
+
+        if calls:
+            self.update_messages(tool_calls=calls)
+
+            for call in calls:
+                tool_result = self.__handle_tool_call(call)
+                self.update_messages(single_message=tool_result)
+
+            yield from self.make_assistant_request(False, True, False)
 
     def __handle_response(self, response: ChatCompletion) \
             -> Generator[str]:
@@ -133,14 +139,16 @@ class OpenAIService(AIAbstractClass):
         except BadRequestError as e:
             self.ignore_tools = True
             print(f'exception: {e}')
-            method_args.__delitem__('tools')
-            method_args.__delitem__('tool_choice')
+            if 'tools' in method_args:
+                method_args.__delitem__('tools')
+            if 'tool_choice' in method_args:
+                method_args.__delitem__('tool_choice')
             response = self.OPENAI.chat.completions.create(**method_args)
 
         if stream:
-            yield from self.__handle_stream_response(response)
+            return self.__handle_stream_response(response)
         else:
-            yield from self.__handle_response(response)
+            return self.__handle_response(response)
 
     def instantiate_messages(self, system_message: str = None, use_system_message: bool = False):
         if use_system_message:
@@ -158,7 +166,7 @@ class OpenAIService(AIAbstractClass):
 
     def update_messages(self, use_system_message: bool = False, system_message: str = None,
                         assistant_message: str = None, user_message: str = None, full_history: list[dict] = None,
-                        assistant_thread: bool = False, single_message: dict | ChatCompletionMessage = None):
+                        assistant_thread: bool = False, single_message: dict | ChatCompletionMessage = None, tool_calls: list[dict] = None):
         if assistant_thread:
             return
 
@@ -178,14 +186,20 @@ class OpenAIService(AIAbstractClass):
                 "role": "user",
                 "content": user_message
             })
+        if tool_calls:
+            self.MESSAGES.append({
+                "role": "assistant",
+                "content": None,
+                "tool_calls": tool_calls
+            })
 
         if single_message:
             self.MESSAGES.append(single_message)
 
-    def make_assistant_request(self, json: bool, stream: bool, use_tools: bool) -> Generator[str]:
-        yield from self.call_openai_api(json, stream, use_tools)
+    def make_assistant_request(self, json: bool = False, stream: bool = False, use_tools: bool = True) -> Generator[str]:
+        return self.call_openai_api(json, stream, use_tools)
 
-    def make_request(self, tone: str, request: str, json: bool, stream: bool, use_tools: bool) \
+    def make_request(self, system_message: str = '', request: str = '', json: bool = False, stream: bool = False, use_tools: bool = False) \
             -> Generator[str]:
-        self.update_messages(use_system_message=True, system_message=tone, user_message=request, full_history=None)
-        yield from self.call_openai_api(json, stream, use_tools)
+        self.update_messages(use_system_message=True, system_message=system_message, user_message=request, full_history=None)
+        return self.call_openai_api(json, stream, use_tools)

@@ -2,10 +2,10 @@ from argparse import Namespace
 import uuid
 from llms.core import ToolBox, BattleSim
 from llms.core.classes import Model
-from llms.service import (AIService,
-                          display_markdown,
+from llms.service import (display_markdown,
                           create_request_display,
                           create_chat_display)
+from llms.provider import ProviderFactory
 
 from helpers import ConfigLoader, add_update_conf, view_user_conf, container
 
@@ -15,8 +15,8 @@ instantiate dependencies
 config_loader = ConfigLoader()
 container.register('config_loader', config_loader)
 
-ai_service = AIService()
-container.register('ai_service', ai_service)
+provider_factory = ProviderFactory()
+container.register('provider_factory', provider_factory)
 
 tool_box = ToolBox()
 container.register('tool_box', tool_box)
@@ -66,7 +66,7 @@ def interactive(args: Namespace) -> None:
     models = view_user_conf()
 
     def call_model(request: str, model: str):
-        response = ai_service.get(model).make_request(tone=args.tone, request=request, stream=True)
+        response = provider_factory.get(model).make_request(system_message=args.tone, request=request, stream=True)
 
         result = ''
         for chunk in response:
@@ -77,14 +77,16 @@ def interactive(args: Namespace) -> None:
 
 
 def chat_bot(args: Namespace) -> None:
-    ai_facade = ai_service.get(model=args.provider)
+    provider = provider_factory.get(name=args.provider)
 
     def chat(message, history):
-        ai_facade.update_messages(use_system_message=True, user_message=message, full_history=history)
-        response = ai_facade.make_assistant_request(json=False, stream=True, use_tools=True)
+        provider.update_messages(use_system_message=True, user_message=message, full_history=history)
+        response = provider.make_assistant_request(json=False, stream=True, use_tools=False)
         result = ''
 
         for chunk in response:
+            if not chunk:
+                continue
             result += chunk.replace('<', '"').replace('>', '"').replace('/', '')
             yield result
 

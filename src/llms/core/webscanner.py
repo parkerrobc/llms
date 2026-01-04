@@ -39,7 +39,7 @@ def process_links(links: dict) -> str:
     return link_content
 
 
-@inject(ai_service='ai_service')
+@inject(provider_factory='provider_factory')
 class WebScanner:
     """
         This class uses AI to scan website data
@@ -78,13 +78,13 @@ class WebScanner:
         :return: -> str containing details about the website
         """
         print(f'*** scanning website {website.url} ***')
-        ai_facade = self.ai_service.get(model)
+        provider = self.provider_factory.get(model)
 
         scan_request = (self.REQUEST
                         .replace('{url}', website.title)
                         .replace('{links}', ", ".join(website.links)))
 
-        scan_results = ai_facade.make_request(self.TONE, scan_request, True)
+        scan_results = provider.make_request(system_message=self.TONE, request=scan_request, json=True)
 
         links_str = ''
 

@@ -3,7 +3,7 @@ from typing import Generator
 from helpers import inject
 
 
-@inject(ai_service='ai_service')
+@inject(provider_factory='provider_factory')
 class Joker:
     """
     wanna hear a joke? ask this mo-fo
@@ -20,8 +20,8 @@ class Joker:
         """
         :return: -> str the joke
         """
-        ai_facade = self.ai_service.get(model)
+        provider = self.provider_factory.get(model)
         tone = f"{self.TONE} {tone}" if tone else self.TONE
         request = self.REQUEST.replace('{joke_type}', joke_type).replace('{audience}', audience)
 
-        yield ai_facade.make_request(tone, request)
+        yield provider.make_request(system_message=tone, request=request)

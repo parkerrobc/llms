@@ -3,7 +3,7 @@ from typing import Generator
 from helpers import inject
 
 
-@inject(ai_service='ai_service')
+@inject(provider_factory='provider_factory')
 class BrochureMaker:
     """
         This class uses AI to create a brochure.
@@ -36,10 +36,10 @@ class BrochureMaker:
         """
         print('*** creating brochure ***')
         print(details)
-        ai_facade = self.ai_service.get(model)
+        provider = self.provider_factory.get(model)
         tone = f"{self.TONE}  {tone}" if tone else self.TONE
         brochure_request = self.REQUEST.replace('{title}', title).replace('{details}', details)
-        brochure_response = ai_facade.make_request(tone, brochure_request, stream=stream)
+        brochure_response = provider.make_request(system_message=tone, request=brochure_request, stream=stream)
 
         parsed_response = ''
 

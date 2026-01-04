@@ -1,7 +1,7 @@
 from helpers import inject
 from llms.core.classes import Model
 
-@inject(ai_service='ai_service')
+@inject(provider_factory='provider_factory')
 class BattleSim:
     def __init__(self, models: list[Model]) -> None:
         self.MODELS: list[Model] = models
@@ -16,7 +16,7 @@ class BattleSim:
 
                 if interaction == 0 and i == 0 and first_message:
                     print(f'\n{key.upper()}:\n{first_message}\n')
-                    self.ai_service.get(provider, key=key).update_messages(assistant_message=first_message)
+                    self.provider_factory.get(provider, key=key).update_messages(assistant_message=first_message)
 
                 user_messages = [other_model['response']
                                  for j, other_model in enumerate(self.MODELS)
@@ -24,9 +24,9 @@ class BattleSim:
 
                 for user_message in user_messages:
                     if user_message:
-                        self.ai_service.get(provider, key=key).update_messages(user_message=user_message)
+                        self.provider_factory.get(provider, key=key).update_messages(user_message=user_message)
 
-                response = self.ai_service.get(provider, key=key).make_assistant_request()
+                response = self.provider_factory.get(provider, key=key).make_assistant_request()
 
                 parsed_response: str = ''
 
@@ -34,6 +34,6 @@ class BattleSim:
                     parsed_response += info
 
                 print(f'\n{key.upper()}:\n{parsed_response}\n')
-                self.ai_service.get(provider, key=key).update_messages(assistant_message=parsed_response, assistant_thread=True)
+                self.provider_factory.get(provider, key=key).update_messages(assistant_message=parsed_response, assistant_thread=True)
 
                 self.MODELS.__setitem__(i, model | {'response': parsed_response})

@@ -1,5 +1,4 @@
 import json
-from typing import Generator
 
 from llms.core.classes import Website
 from llms.core import WebScanner, BrochureMaker, Joker
@@ -9,7 +8,7 @@ from helpers import inject, view_user_conf
 models = ['-'] + view_user_conf()
 
 
-@inject(ai_service='ai_service')
+@inject(provider_factory='provider_factory')
 class ToolBox:
     __ticket_prices = {"london": "$799", "paris": "$899", "tokyo": "$1400", "berlin": "$499"}
 
@@ -42,8 +41,8 @@ class ToolBox:
 
     def simple_request(self, model: str, request: str) -> str:
         print(f'*** asking {request} to {model} ***')
-        ai_facade = self.ai_service.get(model)
-        response = ai_facade.make_request(tone='', request=request)
+        provider = self.provider_factory.get(model)
+        response = provider.make_request(request=request)
 
         result = ''
         for value in response:
@@ -86,7 +85,7 @@ class ToolBox:
         "description": "Scans a website and returns all of the important details including relevant links and "
                        "information. Call this whenever you need to know the details about a website, for example when "
                        "someone asks 'can you tell me about <url>?'. You should only call this when someone "
-                       "explicitly enters a valid https url.",
+                       "explicitly enters a valid https <url>. Never call this without a <url> or without a <model>",
         "parameters": {
             "type": "object",
             "properties": {
@@ -225,10 +224,10 @@ class ToolBox:
         return self.__tools
 
     def handle_tool_call(self, function: str, args: str) -> str:
-        arguments = json.loads(args)
-
         if function not in self.__functions:
             return ''
+
+        arguments = json.loads(args)
 
         tool_response = self.__functions[function](self, **arguments)
 
