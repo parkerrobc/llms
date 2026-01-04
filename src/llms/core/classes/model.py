@@ -1,9 +1,7 @@
 from typing import TypedDict, Required, NotRequired
 
-from llms.service.ai_facade import AIFacade
-
 
 class Model(TypedDict):
-    name: Required[str]
-    service: Required[AIFacade]
+    provider: Required[str]
+    key: Required[str]
     response: NotRequired[str]

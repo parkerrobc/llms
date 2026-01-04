@@ -17,9 +17,9 @@ class AnthropicService(AIAbstractClass):
         return
 
     def update_messages(self, use_system_message: bool, system_message: str, assistant_message: str,
-                        user_message: str, full_history: list[dict], assistant_thread: bool = False,) -> None:
+                        user_message: str, full_history: list[dict] | None, assistant_thread: bool = False,) -> None:
 
-        for history in full_history:
+        for history in (full_history or []):
             if 'metadata' in history:
                 del history['metadata']
             if 'options' in history:

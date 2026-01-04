@@ -47,15 +47,16 @@ def make_joke(args: Namespace) -> None:
 
 
 def battle_sim(args: Namespace) -> None:
-    start_name = f'{'default' if args.provider == '-' else args.provider}-{str(uuid.uuid4())[3::4]}'
-    ai_facade = ai_service.get(model=args.provider, key=start_name)
-    models: list[Model] = [
-        {'name': f'{start_name}-{ai_facade.get_name()}', 'service': ai_facade, 'response': ''}]
+    models: list[Model] = []
 
-    for model in args.models:
-        name = f'{'default' if model == '-' else model}-{str(uuid.uuid4())[3::4]}'
-        model_service = ai_service.get(model=model, key=name)
-        models.append({'name': f'{name}-{model_service.get_name()}', 'service': model_service, 'response': ''})
+    for provider in [args.provider, *args.models]:
+        key = f'{'default' if provider == '-' else provider}-{str(uuid.uuid4())[3::4]}'
+        model: Model = {
+            'provider': provider,
+            'key': key,
+            'response': ''
+        }
+        models.append(model)
 
     battle = BattleSim(models)
     battle.start(args.numberOfBattles, args.firstMessage)
