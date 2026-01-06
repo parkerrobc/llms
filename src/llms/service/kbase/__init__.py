@@ -1,6 +1,8 @@
 from .dir_knowledge_service import DirKnowledgeService
 
 from .kbase_service import KBaseService, KBaseConfig, KBaseType
+from .vector_service import VectorService
+
 
 def get_kbase_service(config: KBaseConfig) -> KBaseService:
     kbase_type = KBaseType[config['type'].upper()]
@@ -8,3 +10,5 @@ def get_kbase_service(config: KBaseConfig) -> KBaseService:
     match kbase_type:
         case KBaseType.DIRECTORY:
             return DirKnowledgeService(config)
+        case KBaseType.VECTOR:
+            return VectorService(config)

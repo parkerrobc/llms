@@ -1,4 +1,4 @@
-from typing import Generator
+from typing import Iterator
 
 import google.generativeai
 
@@ -23,11 +23,11 @@ class GoogleService(AIService):
         TODO
         """
 
-    def make_assistant_request(self, json: bool = False, stream: bool = False, use_tools: bool = False) -> Generator[str]:
+    def make_assistant_request(self, json: bool = False, stream: bool = False, use_tools: bool = False) -> Iterator[str]:
         pass
 
     def make_request(self, system_message: str = '', request: str = '', json: bool = False, stream: bool = False, use_tools: bool = False) \
-            -> Generator[str]:
+            -> Iterator[str]:
 
         user_message = (request or self.config['request']) \
             if self.request_char_limit <= 0 \

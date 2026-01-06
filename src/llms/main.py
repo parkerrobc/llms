@@ -79,8 +79,8 @@ def interactive(args: Namespace) -> None:
 def chat_bot(args: Namespace) -> None:
     provider = provider_factory.get(name=args.provider)
 
-    def chat(message, history):
-        provider.update_messages(use_system_message=True, user_message=message, full_history=history)
+    async def chat(message, history):
+        await provider.update_messages(use_system_message=True, user_message=message, full_history=history)
         response = provider.make_assistant_request(json=False, stream=True, use_tools=False)
         result = ''
 

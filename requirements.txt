@@ -8,6 +8,7 @@ matplotlib
 scikit-learn
 pyarrow
 sentencepiece
+tiktoken
 
 # PyTorch - adjust based on your system (CPU/CUDA) Not used now but will be
 # For CPU only:
@@ -17,19 +18,47 @@ sentencepiece
 # For CUDA 12.1, replace with:
 # torch --index-url https://download.pytorch.org/whl/cu121
 
-# Vector databases and embeddings
+# DB / pool
+psycopg[binary,pool]
 
 # Application and CLI tools
 pyinstaller
 rich
 beautifulsoup4
 
-# ML and transformers
+# Ingestion helpers
+unstructured
+unstructured[pdf]
+unstructured[docx]
+unstructured[image]
+markdown
+pytesseract
+pymupdf
 
 # LLM APIs
 openai
 anthropic
 google-generativeai
+#Langchain
+langchain
+langchain_core
+langchain-openai
+langchain-community
+langchain-text-splitters
+langchain-postgres
+
+
+#Caching
+redis
+langchain-redis
+
+
+#Re-Ranking
+cohere
+langchain-cohere
+
+#Evals
+ragas
 
 # UI and utilities
 gradio

@@ -1,4 +1,4 @@
-from typing import Generator
+from typing import Iterator
 
 from helpers import inject
 
@@ -22,7 +22,7 @@ class BrochureMaker:
     """
 
     def create_brochure(self, model: str, tone: str, title: str, details: str, stream: bool = False) \
-            -> Generator[str]:
+            -> Iterator[str]:
         """
             creates an AI generated markdown brochure using self.TONE and self.REQUEST
 

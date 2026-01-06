@@ -1,5 +1,5 @@
 import sys
-from typing import Generator
+from typing import Iterator
 
 from openai import OpenAI, Stream, BadRequestError
 from openai.types.chat import ChatCompletionMessageToolCall, ChatCompletionChunk, ChatCompletion, ChatCompletionMessage
@@ -52,7 +52,7 @@ class OpenAIService(AIService):
         }
 
     def __handle_stream_response(self, response: Stream[ChatCompletionChunk]) \
-            -> Generator[str]:
+            -> Iterator[str]:
         if not response:
             print("\nOpenAI Library request failed\n")
             sys.exit(1)
@@ -97,7 +97,7 @@ class OpenAIService(AIService):
             yield from self.make_assistant_request(False, True, False)
 
     def __handle_response(self, response: ChatCompletion) \
-            -> Generator[str]:
+            -> Iterator[str]:
         if not response.choices:
             print("\nOpenAI Library request failed\n")
             sys.exit(1)
@@ -117,7 +117,7 @@ class OpenAIService(AIService):
                 yield choice.message.content or ''
 
     def call_openai_api(self, json: bool, stream: bool, use_tools: bool) \
-            -> Generator[str]:
+            -> Iterator[str]:
 
         method_args: dict = {
             'model': self.config['model'],
@@ -196,10 +196,10 @@ class OpenAIService(AIService):
         if single_message:
             self.MESSAGES.append(single_message)
 
-    def make_assistant_request(self, json: bool = False, stream: bool = False, use_tools: bool = True) -> Generator[str]:
+    def make_assistant_request(self, json: bool = False, stream: bool = False, use_tools: bool = True) -> Iterator[str]:
         return self.call_openai_api(json, stream, use_tools)
 
     def make_request(self, system_message: str = '', request: str = '', json: bool = False, stream: bool = False, use_tools: bool = False) \
-            -> Generator[str]:
+            -> Iterator[str]:
         self.update_messages(use_system_message=True, system_message=system_message, user_message=request, full_history=None)
         return self.call_openai_api(json, stream, use_tools)

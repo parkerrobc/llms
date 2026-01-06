@@ -1,14 +1,17 @@
 {
-  "kbase" : [
-    {
-      "name": "some_dir",
-      "location": "'some location on your file system",
-      "type": "directory",
-      "kWords": [
-        "somekeyword"
-      ]
-    }
-  ],
+  "kbase": {
+    "name": "some_kbase_name",
+    "location": "'some location on your file system",
+    "type": "vector",
+    "connectionStr": "postgresql+asyncpg://postgres:postgres@postgres:5432/postgres",
+    "topN": 3,
+    "embedModel": "text-embedding-3-small",
+    "reRankModel": "rerank-multilingual-v3.0",
+    "tableName": "some_name",
+    "metadataColumns": ["document_id", "category", "source"],
+    "metadataJsonColumn": "metadata"
+  }
+  ,
   "aiConfig": {
     "tone": "As a casual, laid-back fellow, answer any inquiry with whit and an aura of charm.",
     "request": "Tell me about yourself.",

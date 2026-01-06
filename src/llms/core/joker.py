@@ -1,4 +1,4 @@
-from typing import Generator
+from typing import Iterator
 
 from helpers import inject
 
@@ -16,7 +16,7 @@ class Joker:
     Tell a {joke_type} joke for an audience of {audience}.
     """
 
-    def tell_joke(self, model: str, tone: str, joke_type: str, audience: str) -> Generator[str]:
+    def tell_joke(self, model: str, tone: str, joke_type: str, audience: str) -> Iterator[str]:
         """
         :return: -> str the joke
         """

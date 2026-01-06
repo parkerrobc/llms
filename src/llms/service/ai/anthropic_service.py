@@ -1,5 +1,5 @@
 import sys
-from typing import Generator
+from typing import Iterator
 
 import anthropic
 
@@ -39,7 +39,7 @@ class AnthropicService(AIService):
                 "content": user_message
             })
 
-    def make_assistant_request(self, json: bool = False, stream: bool = False, use_tools: bool = False) -> Generator[str]:
+    def make_assistant_request(self, json: bool = False, stream: bool = False, use_tools: bool = False) -> Iterator[str]:
         method_args: dict = {
             'model': self.config['model'],
             'max_tokens': self.config['maxTokens'],
@@ -67,7 +67,7 @@ class AnthropicService(AIService):
 
         return messages
 
-    def __simple_request(self, method_args) -> Generator[str]:
+    def __simple_request(self, method_args) -> Iterator[str]:
         response = self.ANTHROPIC.messages.create(**method_args)
 
         if not response.content:
@@ -77,7 +77,7 @@ class AnthropicService(AIService):
         for content in response.content:
             yield content.text
 
-    def __stream_request(self, method_args) -> Generator[str]:
+    def __stream_request(self, method_args) -> Iterator[str]:
         response = self.ANTHROPIC.messages.stream(**method_args)
 
         if not response:
@@ -89,7 +89,7 @@ class AnthropicService(AIService):
                 yield text.replace("\n", " ").replace("\r", " ")
 
     def make_request(self, system_message: str = '', request: str = '', json: bool = False, stream: bool = False, use_tools: bool = False) \
-            -> Generator[str]:
+            -> Iterator[str]:
 
         messages = self.message_builder(request)
 

@@ -3,17 +3,30 @@ from typing import TypedDict, Required, Union, Literal
 
 from abc import abstractmethod, ABC
 
-
 class KBaseType(Enum):
     DIRECTORY = 'DIRECTORY'
+    VECTOR = 'VECTOR'
 
-class DirKnowledgeConfig(TypedDict):
+class BaseConfig(TypedDict):
+    name: Required[str]
+
+class DirKnowledgeConfig(BaseConfig):
     name: Required[str]
     location: Required[str]
     type: Literal[KBaseType.DIRECTORY]
-    kWords: Required[list[str]]
+    metadata: Required[list[str]]
 
-KBaseConfig = Union[DirKnowledgeConfig]
+class VectorStoreConfig(BaseConfig):
+    connectionStr: Required[str]
+    reRankModel: Required[str]
+    topN: Required[int]
+    location: Required[str]
+    embedModel: Required[str]
+    tableName: Required[str]
+    metadataJsonColumn: Required[str]
+    metadataColumns: Required[list[str]]
+
+KBaseConfig = Union[DirKnowledgeConfig, VectorStoreConfig]
 
 class KBaseService(ABC):
     @abstractmethod
@@ -21,5 +34,5 @@ class KBaseService(ABC):
         self.config: KBaseConfig = config
 
     @abstractmethod
-    def load_context(self, request: str) -> list[str]:
+    async def load_context(self, request: str) -> str:
         raise NotImplementedError

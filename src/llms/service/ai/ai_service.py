@@ -1,7 +1,7 @@
 from abc import abstractmethod, ABC
 
 from enum import Enum
-from typing import TypedDict, NotRequired, Required, Generator, Literal, Union
+from typing import TypedDict, NotRequired, Required, Iterator, Literal, Union
 
 
 class Library(Enum):
@@ -55,7 +55,7 @@ class AIService(ABC):
         self.request_char_limit = config['requestCharLimit'] or 0
 
     @abstractmethod
-    def make_request(self, system_message: str = '', request: str = '', json: bool = False, stream: bool = False, use_tools: bool = False) -> Generator[
+    def make_request(self, system_message: str = '', request: str = '', json: bool = False, stream: bool = False, use_tools: bool = False) -> Iterator[
         str]:
         raise NotImplementedError
 
@@ -65,7 +65,7 @@ class AIService(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def make_assistant_request(self, json: bool = False, stream: bool = False, use_tools: bool = False) -> Generator[str]:
+    def make_assistant_request(self, json: bool = False, stream: bool = False, use_tools: bool = False) -> Iterator[str]:
         raise NotImplementedError
 
     def get_name(self) -> str:
